@@ -5,43 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Transceiver construction guide</title>
-    <link rel="icon" href="assets/Transceiver2.jpg" type="image/jpg">
+    <link rel="icon" href="assets/Transceiver1.jpg" type="image/jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet" />
     <link href="styles.css" rel="stylesheet" />
 </head>
 <body>
+
+<section id="title">
+  <h1>Wilkommen auf der statischen Webseite von Max Mustermann</h1>
   
-  <section id="title">
-    <h1>Wilkommen auf der administrativen Webseite von Max Mustermann</h1>
-    
-    <div class="img-container"><img src="assets/Transceiver2.jpg" alt="DB9HF"></div>
-  
+  <div class="img-container"><img src="assets/Transceiver1.jpg" alt="DB9HF"></div>
+
+</section>
+<section id="bio">
+
+  <div id="headline-bio" class="minButton"><h2>Über mich</h2></div>
+
+  <section id="bio-height">
+
+    <div class="text">
+
+      <h2>allgemeiner Text</h2>
+
+      Ich bin leidenschaftlicher Holzhandwerker. Seit jeher faszinieren mich die vielfältigen Möglichkeiten, die Holz als Material bietet. Von klassischen Möbelstücken über individuelle Dekorationen bis hin zu komplexeren Projekten – ich liebe es, mit meinen Händen und kreativen Ideen einzigartige Stücke zu schaffen.
+
+      Meine Arbeiten zeichnen sich durch hohe Präzision und Liebe zum Detail aus. Jedes Projekt ist für mich eine neue Gelegenheit, meine Techniken zu verfeinern und mit verschiedenen Holzarten und Werkzeugen zu experimentieren. Dabei lege ich großen Wert auf Nachhaltigkeit und die Auswahl von qualitativ hochwertigem Holz aus Forstbetrieben.
+
+      Abseits der Werkbank finde ich Inspiration in der Natur und in traditionellen Handwerksmethoden, die ich oft mit modernen Ansätzen kombiniere. Für mich ist Holzbearbeitung mehr als nur ein Handwerk – es ist eine Leidenschaft, die ich gerne mit anderen teile.
+
+      Ich freue mich darauf, meine Holzarbeiten zu präsentieren und mit anderen Menschen, die ebenfalls die Faszination für dieses Handwerk teilen, in Kontakt zu treten.
+    </div>
+
   </section>
-  <section id="bio">
-  
-    <div id="headline-bio" class="minButton"><h2>Über mich</h2></div>
-  
-    <section id="bio-height">
-  
-      <div class="text">
-  
-        <h2>allgemeiner Text</h2>
-  
-        Ich bin leidenschaftlicher Holzhandwerker. Seit jeher faszinieren mich die vielfältigen Möglichkeiten, die Holz als Material bietet. Von klassischen Möbelstücken über individuelle Dekorationen bis hin zu komplexeren Projekten – ich liebe es, mit meinen Händen und kreativen Ideen einzigartige Stücke zu schaffen.
-  
-        Meine Arbeiten zeichnen sich durch hohe Präzision und Liebe zum Detail aus. Jedes Projekt ist für mich eine neue Gelegenheit, meine Techniken zu verfeinern und mit verschiedenen Holzarten und Werkzeugen zu experimentieren. Dabei lege ich großen Wert auf Nachhaltigkeit und die Auswahl von qualitativ hochwertigem Holz aus Forstbetrieben.
-  
-        Abseits der Werkbank finde ich Inspiration in der Natur und in traditionellen Handwerksmethoden, die ich oft mit modernen Ansätzen kombiniere. Für mich ist Holzbearbeitung mehr als nur ein Handwerk – es ist eine Leidenschaft, die ich gerne mit anderen teile.
-  
-        Ich freue mich darauf, meine Holzarbeiten zu präsentieren und mit anderen Menschen, die ebenfalls die Faszination für dieses Handwerk teilen, in Kontakt zu treten.
-      </div>
-  
-    </section>
-  
-  </section>
+
+</section>
 <section id="instructions">
 
   <div id="headline-ins" class="minButton width100"><h2>Anleitung</h2></div>
@@ -62,11 +61,313 @@
 
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
+<script aria-label="GET function">
+
+function getfromCMS(callback, errorCallback = console.error) {
+      fetch('/api/cms')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not OK');
+            }
+            return response.json();
+        })
+        .then(data => {
+            callback(data);  // Call the callback function with the retrieved data
+        })
+        .catch(error => {
+            errorCallback(error);  // Call the error handling function
+        });
+    }
+
+</script>
 <script src="https://cdn.jsdelivr.net/npm/leader-line@1.0.7/leader-line.min.js"></script>
-<script src="machinator.js"></script>
+<script aria-label="lines">
+
+let allLinesData = [];
+
+function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues, hI) {
+  // colors
+  const lineColors                               = ['orange', 'aliceblue', 'beige', 'sandybrown', 'springgreen', 'gold', 'fuchsia', 'thistle', 'white', 'palevioletred'];
+  let lineColor                                  = lColor;
+
+  // restrictors
+  const textbubble                               = document.querySelector(`[data-hash-value="${tbIdentifier}"]`);
+  const geoArea                                  = textbubble.querySelector(`.geometryArea`);
+  const KatBox                                   = textbubble.closest('.KatBox');
+  const BubblesCont                              = KatBox.querySelector('.ContCont.bubbleContainer.row');
+  const alltxtbubbles                            = BubblesCont.querySelectorAll('.txtbubble');
+  const imgColumn                                = KatBox.querySelector('.imgColumn.column');
+  const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
+  let hoveredImage                               = imgColumn.querySelector(`[data-img-hash="${hI}"]`) || imgColumn.querySelector('#imgbubble-0');
+  //storing hoveredImage dimensions
+  let hIwidth = 0, hIheight = 0, leftPosPercent = 0, topPosPercent = 0;
+  function HIDimensions(e1, e2) {
+    hIwidth  = e1 || hoveredImage.offsetWidth;
+    hIheight = e2 || hoveredImage.offsetHeight;
+  }
+  HIDimensions();
+
+  // StartPoint creation
+  const StartPoint                               = document.createElement('div');
+  StartPoint.classList.add('StartPoint');
+  if (invisibility) StartPoint.classList.add('invisible');
+  StartPoint.id                                  = SPID; // Create a unique ID for the StartPoint
+  StartPoint.style.backgroundColor               = lineColor;
+  geoArea.appendChild(StartPoint);
+
+  // EndArea creation
+  const EndArea                                  = document.createElement('div');
+  EndArea.classList.add('EndArea');
+  if (invisibility) EndArea.classList.add('invisible');
+  EndArea.id                                     = EAID;
+  EndArea.style.width                            = EEValues.EAwidth;
+  EndArea.style.height                           = EEValues.EAheight;
+  EndArea.style.borderRadius                     = '10px';
+  EndArea.setAttribute('data-clicks', '0');
+  EndArea.style.border                           = '5px solid ' + `${lineColor}`;
+  EndArea.style.left                             = EEValues.EAleft;
+  EndArea.style.top                              = EEValues.EAtop;
+  EndArea.style.transform                        = EEValues.EAtransform;
+  EndArea.setAttribute('data-x', '0');
+  EndArea.setAttribute('data-y', '0');
+  hoveredImage.appendChild(EndArea);
+  // storing EndArea dimensions
+  let EAwidth, EAheight;
+  function EADimensions(e1, e2) {
+    EAwidth  = e1 || EndArea.offsetWidth;
+    EAheight = e2 || EndArea.offsetHeight;
+  };
+  EADimensions;
+
+  // Line by LeaderLine
+  const line = new LeaderLine(
+    StartPoint,
+    EndArea,
+    {
+      size: 5,
+      color: lineColor,
+      endPlug: 'behind'
+    }
+  )
+
+  //if invisible, line gone hiding
+  let isHidden = false;
+  if (invisibility) {
+    isHidden = true;
+    //line.hide();
+  }
+
+  // window size change
+  window.addEventListener('resize', function () {
+    // Update the dimensions of hoveredImage
+    const hIRect               = hoveredImage.getBoundingClientRect();
+    const hIchangeINwidth      = hIRect.width / hIwidth;
+    const hIchangeINheight     = hIRect.height / hIheight;
+
+    // Update size and position of EndArea
+    EndArea.style.transform    = `translate(0px, 0px)`;
+    EndArea.setAttribute('data-x', '0');
+    EndArea.setAttribute('data-y', '0');
+    EndArea.style.width        = `${EAwidth * hIchangeINwidth}px`;
+    EndArea.style.height       = `${EAheight * hIchangeINheight}px`;
+    EndArea.style.top          = `${hIRect.height / topPosPercent}px`;
+    EndArea.style.left         = `${hIRect.width / leftPosPercent}px`;
+
+    HIDimensions(hIRect.offsetWidth, hIRect.offsetHeight);
+    EADimensions(EndArea.offsetWidth, EndArea.offsetHeight);
+
+    line.position();
+  });
+
+  // line.hide() and .show() min-and-maximizing headlines
+  const h2Headline = KatBox.querySelector('.Section.column h2');
+  let isCollapsed1 = false;
+  h2Headline.addEventListener('click', () => {
+    isCollapsed1 = !isCollapsed1;
+    if (isCollapsed1) {
+      console.log('passedS1');
+      line.hide();
+    } else {
+      console.log('passedS1A');
+      line.show();
+    }
+  });
+  // global hlButtonIns is in another <script>
+
+  // bundle all SPID, LID, EAID
+  if (!isHidden) {
+    setInterval(() => {
+      line.position(); 
+    }, 1500);
+  }
+  const bundle                                   = { SPID, line, EAID };
+  allLinesData.push(bundle);
+
+  return allLinesData;
+
+};
+</script>
+<script aria-label="first run">
+
+document.addEventListener('DOMContentLoaded', () => {
+    getfromCMS((data) => {
+      if (!data) {
+        console.error('No data received');
+        return;
+      }
+      const contCont                                       = document.querySelector('#categories-container');
+      if (!contCont) {
+        console.error('Container element not found');
+        return;
+      }
+      if (!data.length) {
+        contCont.appendChild(newCategoryOffer());
+        return;
+      }
+      data.forEach(e => {
+        if (!e || !e.KatID) {
+          console.error('Invalid category data:', e);
+          return;
+        }
+        const tempSection                                = document.createElement('section');
+        tempSection.id                                   = 'KatBox-' + e.KatID;
+        tempSection.classList.add('KatBox', 'row', 'list-group-item');
+        tempSection.addEventListener('click', function (e) {
+          if ((e.target.tagName === 'H2')){
+            this.querySelector('.ContCont.bubbleContainer.row').classList.toggle('minimize');
+          }
+        });
+        tempSection.innerHTML                            = e.KatMover + e.KatSection + e.KatDelete;
+
+        const KatMover                                   = tempSection.querySelector('.MoveIconBox');
+        if (!KatMover) {
+          console.error('MoveIconBox element not found');
+          return;
+        }
+        KatMover.classList.add('glyphicon', 'glyphicon-move');
+        contCont.appendChild(tempSection);
+
+        const PickTxtColumn                              = tempSection.querySelector('.txtColumn');
+        if (!PickTxtColumn) {
+          console.error('txtColumn element not found');
+          return;
+        }
+
+        if (Array.isArray(e.KatContentTxt)) {
+          e.KatContentTxt.forEach((txt, index) => {
+            if (!txt || !txt.textbubble) {
+              console.error('Invalid txtbubble data:', txt);
+              return;
+            }
+
+            const reorderTab                               = document.createElement('div');
+            reorderTab.classList.add('MoveIconBox', 'txtreorder', 'glyphicon', 'glyphicon-move');
+            const KatBoxID                                 = tempSection.id;
+
+            const htmlString                               = txt.textbubble;
+            const KContTxtBubble                           = document.createElement('div');
+            const txtbubbleorder                           = index; // Guaranteed to be valid
+            KContTxtBubble.id                              = 'txtbubble-' + txtbubbleorder;
+            KContTxtBubble.classList.add('txtbubble', 'box', 'row');
+            KContTxtBubble.innerHTML                       = htmlString;
+            KContTxtBubble.dataset.hashValue               = txt.hash;
+            PickTxtColumn.appendChild(KContTxtBubble);
+            KContTxtBubble.insertAdjacentElement('afterbegin', reorderTab);
+
+            const geometryArea                             = document.createElement('div');
+            geometryArea.id                                = 'geometryArea-' + txtbubbleorder;
+            const gAID                                     = geometryArea.id;
+            const tbIdentifier                             = txt.hash;
+            const SPID                                     = 'SP-' + `${tbIdentifier}`;
+            const EAID                                     = 'EA-' + `${tbIdentifier}`;
+            geometryArea.classList.add('geometryArea');
+            KContTxtBubble.appendChild(geometryArea); 
+            
+          });
+        }
+
+        const PickImgColumn                              = tempSection.querySelector('.imgColumn');
+        if (!PickImgColumn) {
+          console.error('imgColumn element not found');
+          return;
+        }
+        if (Array.isArray(e.KatContentImg)) {
+          e.KatContentImg.forEach(imgObj => {
+            if (!imgObj || !imgObj.filename) {
+              console.error('Invalid imgbubble data:', imgObj);
+              return;
+            }
+            const KContImgBubble                           = document.createElement('div');
+            KContImgBubble.id                              = 'imgbubble-' + e.KatContentImg.indexOf(imgObj);
+            KContImgBubble.classList.add('imgbubble', 'row');
+            KContImgBubble.dataset.imgHash                 = imgObj.ThreeDigitHash;
+            const KCIBimg                                  = document.createElement('img');
+            KCIBimg.src                                    = `/uploads/${imgObj.filename}`;
+            KContImgBubble.appendChild(KCIBimg);
+
+            PickImgColumn.appendChild(KContImgBubble);
+          });
+        }
+
+        if (Array.isArray(e.KatLines)) {
+          e.KatLines.forEach(lineData => {
+
+            const tbIdentifier = lineData.generalID;
+            const invisibility = lineData.invisible;
+            const SPID         = 'SP-' + `${lineData.generalID}`;
+            const EAID         = 'EA-' + `${lineData.generalID}`;
+            const hI           = lineData.hImage;
+            const lColor       = lineData.lineColor;
+            const EEValues     = lineData.EEValues;
+
+            createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues, hI);
+
+          });
+        }
+
+      });
+
+    });
+  });
+</script>
+<script aria-label="headlines interactor">
+
+  const hlButtonBio            = document.getElementById("headline-bio");
+  
+  hlButtonBio.addEventListener('click', function (e) {
+    document.querySelector('#bio-height').classList.toggle('minimize');
+    this.classList.toggle('changedState');
+  });
+  
+  const hlButtonIns            = document.getElementById("headline-ins");
+  let isCollapsed2             = false;
+  
+  hlButtonIns.addEventListener('click', function (e) {
+    document.querySelector('#categories-container').classList.toggle('minimize'); 
+    this.classList.toggle('changedState'); 
+    this.classList.toggle('width100');
+
+    isCollapsed2 = !isCollapsed2;
+
+    if (isCollapsed2) {
+      allLinesData.forEach(Obj => {
+        Obj.line.hide();
+      })
+    }
+    else {
+      const allBCboxes             = document.querySelectorAll('.ContCont.bubbleContainer');
+      allBCboxes.forEach(BCbox => {
+        allLinesData.forEach(Obj => {
+          const DOMelement  = document.getElementById(Obj.SPID);
+          if (!DOMelement.closest('.minimize')) {
+            Obj.line.show();
+          }
+        })
+      });
+    }
+  });
+
+</script>
 
 </body>
 </html>
