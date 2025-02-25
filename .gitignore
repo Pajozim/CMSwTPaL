@@ -1,0 +1,13 @@
+# Ignore folder and its contents
+/images/
+/node_modules/
+/uploads/
+CMS - Kopie.json
+favicon.ico
+Henrys DB9HF.code-workspace
+index-Admin.html_BU
+index-Admin.html_BU-noLLs
+index-Admin.html_BU-reorg
+input.html
+package.json
+package-lock.json
