@@ -1,0 +1,37 @@
+{
+  "name": "cmswtpal",
+  "version": "1.0.0",
+  "description": "small scale private content management system with text and editor, pictures and connecting lines",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [],
+  "author": "PaJoZim",
+  "license": "ISC",
+  "dependencies": {
+    "busboy": "^1.6.0",
+    "choices.js": "^11.0.2",
+    "connect-livereload": "^0.6.1",
+    "express": "^4.21.1",
+    "interactjs": "^1.10.27",
+    "leader-line": "^1.0.7",
+    "multer": "^1.4.5-lts.1",
+    "serverless-http": "^3.2.0",
+    "sortablejs": "^1.15.6"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.9",
+    "@babel/preset-env": "^7.26.9",
+    "babel-loader": "^9.2.1",
+    "nodemon": "^3.1.9",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  },
+"repository": {
+  "type": "git",
+  "url": "https://github.com/YourUsername/CMSwTPaL.git"
+  }
+}
