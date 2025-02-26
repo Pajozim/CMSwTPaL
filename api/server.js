@@ -385,3 +385,7 @@ app.use(express.static('index.html'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+
+module.exports = (req, res) => {
+    res.status(200).json({ message: "API is working!" });
+  };  
