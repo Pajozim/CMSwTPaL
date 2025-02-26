@@ -387,5 +387,13 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.listen(3000, () => console.log('Server running on http://localhost:3000'));
 
 module.exports = (req, res) => {
-    res.status(200).json({ message: "API is working!" });
-  };  
+    console.log("Request received:", req.method, req.url);
+  
+    try {
+      res.status(200).json({ message: "API is working!" });
+    } catch (error) {
+      console.error("Error in API:", error);
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
