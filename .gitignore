@@ -1,7 +1,5 @@
 # Ignore folder and its contents
 /images/
-/node_modules/
-/uploads/
 CMS - Kopie.json
 favicon.ico
 Henrys DB9HF.code-workspace

@@ -384,7 +384,11 @@ app.use(express.static('index.html'));
 // Serve static images from the 'uploads' directory
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.listen(3000, () => console.log('Server running on http://localhost:3000'));
+const port = process.env.PORT || 3000; // Use 3001 or any available port
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
 
 module.exports = (req, res) => {
     console.log("Request received:", req.method, req.url);
