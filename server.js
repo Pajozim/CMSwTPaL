@@ -304,7 +304,7 @@ app.delete('/api/cms', (req, res) => {
         // Create a new KatContentTxt array without the specified txtbubbleID
         const updatedCategory = {
             ...category,
-            KatContentTxt: category.KatContentTxt.filter((imgObj, index) => index !== txtBIDInt),
+            KatContentTxt: category.KatContentTxt.filter((txtObj, index) => index !== txtBIDInt),
         };
         
         // Update cmsData by replacing the old category

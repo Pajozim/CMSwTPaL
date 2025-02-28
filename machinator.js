@@ -554,7 +554,7 @@ fileInputElement.addEventListener('change', function (e) {
 
 // indicators & line
 
-let allLinesData = [], line = Timer = EAstyleV = null;
+let allLinesData = [], line = Timer = EAstyleV = null, invisibility = false;
 
 function toggleIndicator(tbIdentifier, SPID) {
 
@@ -566,37 +566,36 @@ const targetedEAID                             = document.querySelector(`#${sele
 targetedEAID.classList.toggle('invisible');
 
 if (targetedSPID.classList.contains('invisible')) {
-  console.log('via 1');
   selectedObj.line.hide();
 }
 else {
-  console.log('via 2'); 
   selectedObj.line.show();
-
-  clearTimeout(Timer);
-      Timer = setTimeout(() => {
-        console.log('2.5 seconds have passed');
-
-        const isHidden = targetedSPID.classList.contains('invisible') ? true : false;
-        console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
-        
-        fetch('/LeaderLineUpdate', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ generalID: tbIdentifier, invisible: isHidden })  
-          })
-          .then(response => response.json())
-          .then(data => console.log('Saved:', data))
-          .catch(error => console.error('Error saving:', error));
-        }, 5000);
-
 }
+
+clearTimeout(Timer);
+    Timer = setTimeout(() => {
+      console.log('5 seconds have passed');
+
+      const isHidden = targetedSPID.classList.contains('invisible') ? true : false;
+      console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
+      
+      fetch('/LeaderLineUpdate', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ generalID: tbIdentifier, invisible: isHidden })  
+        })
+        .then(response => response.json())
+        .then(data => console.log('Saved:', data))
+        .catch(error => console.error('Error saving:', error));
+      }, 3000);
+
+return invisibility = targetedSPID.classList.contains('invisible') ? true : false
 
 };
 
-function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues, hI) {
+function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI) {
   // colors
-  const lineColors                               = ['orange', 'aliceblue', 'beige', 'sandybrown', 'springgreen', 'gold', 'fuchsia', 'thistle', 'white', 'palevioletred'];
+  const lineColors                               = ['orange', 'white', 'tomato', 'sandybrown', 'springgreen', 'yellow', 'fuchsia', 'sienna', 'crimson', 'deeppink'];
   let lineColor                                  = lColor || lineColors[0];
 
   // restrictors
@@ -629,14 +628,14 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
   EndArea.classList.add('EndArea');
   if (invisibility) EndArea.classList.add('invisible');
   EndArea.id                                     = EAID;
-  EndArea.style.width                            = EEValues.EAwidth;
-  EndArea.style.height                           = EEValues.EAheight;
+  EndArea.style.width                            = EAValues.EAwidth;
+  EndArea.style.height                           = EAValues.EAheight;
   EndArea.style.borderRadius                     = '10px';
   EndArea.setAttribute('data-clicks', '0');
   EndArea.style.border                           = '5px solid ' + `${lineColor}`;
-  EndArea.style.left                             = EEValues.EAleft;
-  EndArea.style.top                              = EEValues.EAtop;
-  EndArea.style.transform                        = EEValues.EAtransform;
+  EndArea.style.left                             = EAValues.EAleft;
+  EndArea.style.top                              = EAValues.EAtop;
+  EndArea.style.transform                        = EAValues.EAtransform;
   EndArea.setAttribute('data-x', '0');
   EndArea.setAttribute('data-y', '0');
   hoveredImage.appendChild(EndArea);
@@ -672,6 +671,21 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
 
   // this function is used later in the resizing and gesture demos
   window.dragMoveListener = dragMoveListener
+
+  // getting the relation of EndArea to the hoveredImage
+  function EAtohIrelValues() {
+    const EARect           = EndArea.getBoundingClientRect();
+    const hoverImageRect   = hoveredImage.getBoundingClientRect();
+    deltax                 = EARect.left - hoverImageRect.left;
+    deltay                 = EARect.top - hoverImageRect.top;
+    hIwidth                = hoverImageRect.width;
+    hIheight               = hoverImageRect.height;
+    leftPosPercent         = (hIwidth / deltax);
+    topPosPercent          = (hIheight / deltay);
+    EADimensions(EndArea.width, EndArea.height);          
+  }
+
+  EAtohIrelValues();
 
   // interact.js on EndArea
   interact(EndArea)
@@ -765,16 +779,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
           });
         }
 
-        // getting the relation of EndArea to the hoveredImage
-        const EARect           = EndArea.getBoundingClientRect();
-        const hoverImageRect   = hoveredImage.getBoundingClientRect();
-        deltax                 = EARect.left - hoverImageRect.left;
-        deltay                 = EARect.top - hoverImageRect.top;
-        hIwidth                = hoverImageRect.width;
-        hIheight               = hoverImageRect.height;
-        leftPosPercent         = (hIwidth / deltax);
-        topPosPercent          = (hIheight / deltay);
-        EADimensions(EndArea.width, EndArea.height);
+        EAtohIrelValues()
 
         line.position();
       }
@@ -792,13 +797,6 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
     }
   )
 
-  //if invisible, line gone hiding
-  let isHidden = false;
-  if (invisibility) {
-    isHidden = true;
-    //line.hide();
-  }
-
   // window size change
   window.addEventListener('resize', function () {
     // Update the dimensions of hoveredImage
@@ -807,9 +805,10 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
     const hIchangeINheight     = hIRect.height / hIheight;
 
     // Update size and position of EndArea
-    EndArea.style.transform    = `translate(0px, 0px)`;
+    /*EndArea.style.transform    = `translate(0px, 0px)`;
     EndArea.setAttribute('data-x', '0');
-    EndArea.setAttribute('data-y', '0');
+    EndArea.setAttribute('data-y', '0'); */
+    console.log('Positions in Percentage', topPosPercent, leftPosPercent);
     EndArea.style.width        = EAwidth * hIchangeINwidth + 'px';
     EndArea.style.height       = EAheight * hIchangeINheight + 'px';
     EndArea.style.top          = hIRect.height / topPosPercent + 'px';
@@ -824,52 +823,43 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
   // storing coordinates onto backend
   // KatBox ID
   const KatBoxID = KatBox.id;
-  function Payload(tbIdentifier, EAstyleV, line, lineColor, hIHash) {
-    EAstyleV = {
-      EAwidth: window.getComputedStyle(EndArea).width,
-      EAheight: window.getComputedStyle(EndArea).height,
-      EAtop: window.getComputedStyle(EndArea).top,
-      EAleft: window.getComputedStyle(EndArea).left,
-      EAtransform: window.getComputedStyle(EndArea).transform
-    };
-
+  function Payload(tbIdentifier, lineColor, hI) {
     return {
       generalID: tbIdentifier,
       invisible: false,
-      EEValues: {
-        EAwidth: EAstyleV.EAwidth,
-        EAheight: EAstyleV.EAheight,
-        EAtop: EAstyleV.EAtop,
-        EAleft: EAstyleV.EAleft,
-        EAtransform: EAstyleV.EAtransform
+      EAValues: {
+        EAwidth: EAwidth / hoveredImage.offsetWidth,
+        EAheight: EAheight / hoveredImage.offsetHeight,
+        EAtop: topPosPercent,
+        EAleft: leftPosPercent,
+        EAtransform: 'transform(0, 0)'
       },
       lineColor: lineColor,
-      hImage: hIHash
+      hImage: hI
     };
   }
   
-  if (!invisibility) {
-    EndArea.addEventListener('click', () => {
-    clearTimeout(Timer);
-    Timer = setTimeout(() => {
-    console.log('5 seconds have passed');
 
-    EAstyleV = EndArea.getAttribute('style');
-    const linePayload = Payload(tbIdentifier, EAstyleV, line, lineColor, hoveredImage.dataset.imgHash);
-    console.log('linePayload:', linePayload , 'stringified:', JSON.stringify(linePayload));
+EndArea.addEventListener('click', () => {
+  clearTimeout(Timer);
+  Timer = setTimeout(() => {
+  console.log('5 seconds have passed');
 
-    fetch('/LeaderLine', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ KatBoxID: KatBoxID, LeaderLine: linePayload })  
-      })
-      .then(response => response.json())
-      .then(data => console.log('Saved:', data))
-      .catch(error => console.error('Error saving:', error));
-      }, 5000);    
-    
-  })
-  };
+  EAstyleV = EndArea.getAttribute('style');
+  const linePayload = Payload(tbIdentifier, lineColor, hoveredImage.dataset.imgHash);
+  console.log('linePayload:', linePayload , 'stringified:', JSON.stringify(linePayload));
+
+  fetch('/LeaderLine', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ KatBoxID: KatBoxID, LeaderLine: linePayload })  
+    })
+    .then(response => response.json())
+    .then(data => console.log('Saved:', data))
+    .catch(error => console.error('Error saving:', error));
+    }, 3000);    
+  
+  });
 
   // updating StartPoint and Line when textest were shuffled
   /*
@@ -899,7 +889,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
   // global hlButtonIns is in another <script>
 
   // bundle all SPID, LID, EAID
-  if (!isHidden) {
+  if (!invisibility) {
     setInterval(() => {
       line.position(); 
     }, 1500);
@@ -1012,10 +1002,10 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
             KContTxtBubble.appendChild(geometryArea); 
             let lColor = null, hI = null;
             let invisibility = false;
-            let EEValues = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
+            let EAValues = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
             geometryArea.addEventListener('click', () => {
               const existingLine = allLinesData.find(line => line.SPID === SPID);
-              if (!existingLine) createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues, hI);
+              if (!existingLine) createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
               else toggleIndicator(tbIdentifier, SPID);
             });       
 
@@ -1118,11 +1108,31 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues
             const invisibility = lineData.invisible;
             const SPID         = 'SP-' + `${lineData.generalID}`;
             const EAID         = 'EA-' + `${lineData.generalID}`;
-            const hI           = lineData.hImage;
             const lColor       = lineData.lineColor;
-            const EEValues     = lineData.EEValues;
 
-            createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EEValues, hI);
+            const hI           = lineData.hImage;
+            const hIelement    = document.querySelector(`[data-img-hash="${hI}"]`);
+            const img          = hIelement.querySelector('img');
+            
+            img.addEventListener('load', () => {
+              const hIRect = hIelement.getBoundingClientRect();
+
+              const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
+
+              const scaleX = hIRect.width;
+              const scaleY = hIRect.height;
+
+              const EAValues = {
+                EAleft: `${scaleX / EAleft}px`,
+                EAtop: `${scaleY / EAtop}px`,
+                EAwidth: `${scaleX * EAwidth}px`,
+                EAheight: `${scaleY * EAheight}px`,
+                EAtransform: EAtransform
+              };
+  
+              createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            
+            });
 
           });
         }
