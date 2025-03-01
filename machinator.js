@@ -501,13 +501,13 @@ fileInputElement.addEventListener('change', function (e) {
 
 // img deletion
   
-  function deleteImage(imgID, KatID) {
+  function deleteImage(KatID, imgID, imghash) {
     fetch(`/api/cms`, {   
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ KatID, imgID }),
+      body: JSON.stringify({ KatID, imgID, imghash }),
     }).then(response => {
       if (response.ok) {
         response.text();
@@ -558,42 +558,43 @@ let allLinesData = [], line = Timer = EAstyleV = null, invisibility = false;
 
 function toggleIndicator(tbIdentifier, SPID) {
 
-const selectedObj = allLinesData.find(object => object.SPID === SPID);
+  const selectedObj = allLinesData.find(object => object.SPID === SPID);
 
-const targetedSPID                             = document.querySelector(`#${SPID}`);
-targetedSPID.classList.toggle('invisible');
-const targetedEAID                             = document.querySelector(`#${selectedObj.EAID}`);
-targetedEAID.classList.toggle('invisible');
+  const targetedSPID                             = document.querySelector(`#${SPID}`);
+  targetedSPID.classList.toggle('invisible');
+  const targetedEAID                             = document.querySelector(`#${selectedObj.EAID}`);
+  targetedEAID.classList.toggle('invisible');
 
-if (targetedSPID.classList.contains('invisible')) {
-  selectedObj.line.hide();
-}
-else {
-  selectedObj.line.show();
-}
+  if (targetedSPID.classList.contains('invisible')) {
+    selectedObj.line.hide();
+  }
+  else {
+    selectedObj.line.show();
+  }
 
-clearTimeout(Timer);
-    Timer = setTimeout(() => {
-      console.log('5 seconds have passed');
+  clearTimeout(Timer);
+      Timer = setTimeout(() => {
+        console.log('5 seconds have passed');
 
-      const isHidden = targetedSPID.classList.contains('invisible') ? true : false;
-      console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
-      
-      fetch('/LeaderLineUpdate', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ generalID: tbIdentifier, invisible: isHidden })  
-        })
-        .then(response => response.json())
-        .then(data => console.log('Saved:', data))
-        .catch(error => console.error('Error saving:', error));
-      }, 3000);
+        const isHidden = targetedSPID.classList.contains('invisible') ? true : false;
+        console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
+        
+        fetch('/LeaderLineUpdate', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ generalID: tbIdentifier, invisible: isHidden })  
+          })
+          .then(response => response.json())
+          .then(data => console.log('Saved:', data))
+          .catch(error => console.error('Error saving:', error));
+        }, 3000);
 
-return invisibility = targetedSPID.classList.contains('invisible') ? true : false
+  return invisibility = targetedSPID.classList.contains('invisible') ? true : false
 
 };
 
 function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI) {
+
   // colors
   const lineColors                               = ['orange', 'white', 'tomato', 'sandybrown', 'springgreen', 'yellow', 'fuchsia', 'sienna', 'crimson', 'deeppink'];
   let lineColor                                  = lColor || lineColors[0];
@@ -606,13 +607,15 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   const alltxtbubbles                            = BubblesCont.querySelectorAll('.txtbubble');
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
-  let hoveredImage                               = imgColumn.querySelector(`[data-img-hash="${hI}"]`) || imgColumn.querySelector('#imgbubble-0');
+  if (!allimagebubbles.length) return;
+  let hoveredImage                               = imgColumn.querySelector(`[data-img-hash="${hI}"]`) || imgColumn.querySelector('#imgbubble-0') || null;
   //storing hoveredImage dimensions
-  let hIwidth = 0, hIheight = 0, leftPosPercent = 0, topPosPercent = 0;
+  let hIwidth, hIheight, leftPosPercent = 0, topPosPercent = 0;
   function HIDimensions(e1, e2) {
-    hIwidth  = e1 || hoveredImage.offsetWidth;
-    hIheight = e2 || hoveredImage.offsetHeight;
+    hIwidth  = e1 || hoveredImage.offsetWidth || 0;
+    hIheight = e2 || hoveredImage.offsetHeight || 0;
   }
+
   HIDimensions();
 
   // StartPoint creation
@@ -840,7 +843,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   }
   
 
-EndArea.addEventListener('click', () => {
+  EndArea.addEventListener('click', () => {
   clearTimeout(Timer);
   Timer = setTimeout(() => {
   console.log('5 seconds have passed');
@@ -888,6 +891,17 @@ EndArea.addEventListener('click', () => {
   });
   // global hlButtonIns is in another <script>
 
+  // hoveredImage if deleted
+  const deleteBtn   = hoveredImage.querySelector('.imgDelete');
+  const imgbubbleID = hoveredImage.id.split('-')[1];
+  const imgHash     = hoveredImage.dataset.imgHash;
+  console.log('allinesData ante:', allLinesData);
+  deleteBtn.addEventListener('click', () => {
+    allLinesData.filter(line => line.SPID === SPID);
+    console.log('allinesData post:', allLinesData);
+    deleteImage(KatBox.id, imgbubbleID, imgHash)
+  })
+
   // bundle all SPID, LID, EAID
   if (!invisibility) {
     setInterval(() => {
@@ -904,13 +918,13 @@ EndArea.addEventListener('click', () => {
 
 // txtbubble deletion
   
-  function deleteTxtBubble(txtbubbleID, KatID) {
+  function deleteTxtBubble(txtbubbleID, KatID, tbIdentifier) {
     fetch(`/api/cms`, {   
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ KatID, txtbubbleID }),
+      body: JSON.stringify({ KatID, txtbubbleID, tbIdentifier }),
     }).then(response => {
       if (response.ok) {
         response.text();
@@ -1036,7 +1050,7 @@ EndArea.addEventListener('click', () => {
               if (!txtbubbleID || !KatID) {
                  return console.error('Invalid txtbubble ID or KatID:', txtbubbleID, KatID);
               }
-              deleteTxtBubble(txtbubbleID, KatID);
+              deleteTxtBubble(txtbubbleID, KatID, tbIdentifier);
             });
             KContTxtBubble.appendChild(KCTBdelete);
 
@@ -1088,10 +1102,11 @@ EndArea.addEventListener('click', () => {
             })
             KCIBimgDelete.addEventListener('click', function (e) {
               const parentElement                          = this.closest('.imgbubble');
+              const imghash                                = parentElement.dataset.imgHash;
               const imgID                                  = parentElement.id.split('-')[1];
               const KatBox                                 = this.closest('.KatBox');
               const KatID                                  = KatBox.id.split('-')[1];
-              deleteImage(imgID, KatID);
+              deleteImage(KatID, imgID, imghash);
             })
 
             KContImgBubble.appendChild(KCIBimgDelete);
@@ -1112,30 +1127,39 @@ EndArea.addEventListener('click', () => {
 
             const hI           = lineData.hImage;
             const hIelement    = document.querySelector(`[data-img-hash="${hI}"]`);
-            const img          = hIelement.querySelector('img');
-            
-            img.addEventListener('load', () => {
-              const hIRect = hIelement.getBoundingClientRect();
 
-              const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
-
-              const scaleX = hIRect.width;
-              const scaleY = hIRect.height;
-
-              const EAValues = {
-                EAleft: `${scaleX / EAleft}px`,
-                EAtop: `${scaleY / EAtop}px`,
-                EAwidth: `${scaleX * EAwidth}px`,
-                EAheight: `${scaleY * EAheight}px`,
-                EAtransform: EAtransform
-              };
-  
+            if (hIelement === null) {
+              const EAValues     = lineData.EAValues;
+              console.log(EAValues);
               createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            } 
+            else {
+              const img          = hIelement.querySelector('img');
             
-            });
+              img.addEventListener('load', () => {
+                const hIRect = hIelement.getBoundingClientRect();
 
+                const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
+
+                const scaleX = hIRect.width;
+                const scaleY = hIRect.height;
+
+                const EAValues = {
+                  EAleft: `${scaleX / EAleft}px`,
+                  EAtop: `${scaleY / EAtop}px`,
+                  EAwidth: `${scaleX * EAwidth}px`,
+                  EAheight: `${scaleY * EAheight}px`,
+                  EAtransform: EAtransform
+                };
+
+                createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+              });
+
+            }
+            
           });
-        }
+
+        };
 
       });
 

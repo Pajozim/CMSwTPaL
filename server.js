@@ -286,6 +286,7 @@ app.delete('/api/cms', (req, res) => {
         const updatedCategory = {
             ...category,
             KatContentImg: category.KatContentImg.filter((imgObj, index) => index !== imgIDInt),
+            KatLines: category.KatLines.filter((LineObj) => LineObj.hImage !== criteria.imghash),
         };
 
         // Update cmsData by replacing the old category
@@ -294,7 +295,7 @@ app.delete('/api/cms', (req, res) => {
         );
     }  
     else if (criteria.KatID && criteria.txtbubbleID) {
-        console.log('txtbubbleID and KatID');
+        console.log('txtbubbleID and KatID and tbIdentifier', tbIdentifier);
 
         // Find the category with the specified KatID
         const category = cmsData.find(cat => cat.KatID === criteria.KatID);
@@ -302,15 +303,17 @@ app.delete('/api/cms', (req, res) => {
         const txtBIDInt = parseInt(criteria.txtbubbleID, 10);
 
         // Create a new KatContentTxt array without the specified txtbubbleID
-        const updatedCategory = {
+        const updatedKatContentTxt = {
             ...category,
             KatContentTxt: category.KatContentTxt.filter((txtObj, index) => index !== txtBIDInt),
+            KatLines: category.KatLines.filter((LineObj) => LineObj.generalID !== tbIdentifier),
         };
         
         // Update cmsData by replacing the old category
         newCmsData = cmsData.map(cat => 
-            cat.KatID === criteria.KatID ? updatedCategory : cat
+            cat.KatID === criteria.KatID ? updatedKatContentTxt : cat
         );
+            
     }
 
     else if (criteria.KatID && (!criteria.txtbubbleID && !criteria.imgID)) {

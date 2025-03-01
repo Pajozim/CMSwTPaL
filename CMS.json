@@ -5,36 +5,10 @@
     "KatMover": "<div class=\"MoveIconBox\"></div>",
     "KatSection": "<section class=\"Section column\"><h2>Aufbau eines QO100 Transceivers</h2><div class=\"ContCont bubbleContainer row\"><div class=\"txtColumn column\"></div><div class=\"imgColumn column\"></div></div></section>",
     "KatContentTxt": [
-      {
-        "textbubble": "<p>Von A zu B</p>",
-        "hash": "qxb"
-      },
-      {
-        "textbubble": "<p>Von B zu C</p>",
-        "hash": "9po"
-      }
     ],
     "KatContentImg": [
-      {
-        "ThreeDigitHash": "duc",
-        "hash": "151171c8f6cc3a31a321d8d60943ed9aa07b561c73178d97b76023c74757a47e",
-        "filename": "151171c8f6cc3a31a321d8d60943ed9aa07b561c73178d97b76023c74757a47e-IMG-20241015-WA0013.jpg"
-      }
     ],
     "KatLines": [
-      {
-        "generalID": "9po",
-        "invisible": false,
-        "EAValues": {
-          "EAwidth": 0.1947565543071161,
-          "EAheight": 0.2781065088757396,
-          "EAtop": 2.0808187584086104,
-          "EAleft": 2.5445338099493595,
-          "EAtransform": "transform(0, 0)"
-        },
-        "lineColor": "white",
-        "hImage": "duc"
-      }
     ],
     "KatDelete": "<div class=\"deleteCircleBox\"></div>"
   }
