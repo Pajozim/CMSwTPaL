@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="77.278938mm"
+   height="77.278938mm"
+   viewBox="0 0 77.278938 77.278938"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="deleteCirculo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.80800365"
+     inkscape:cx="126.85586"
+     inkscape:cy="84.158036"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-66.360531,-109.86053)">
+    <path
+       id="path234"
+       style="fill:#e26274;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.32292;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="M 105.00003 109.86053 A 38.639469 38.639469 0 0 0 66.360531 148.50003 A 38.639469 38.639469 0 0 0 105.00003 187.13953 A 38.639469 38.639469 0 0 0 143.63953 148.50003 A 38.639469 38.639469 0 0 0 105.00003 109.86053 z M 84.880848 123.38063 A 5 5 0 0 1 88.416032 124.84566 L 105.00003 141.42966 L 121.58403 124.84566 A 5 5 0 0 1 125.11922 123.38063 A 5 5 0 0 1 128.6544 124.84566 A 5 5 0 0 1 128.6544 131.91603 L 112.0704 148.50003 L 128.6544 165.08403 A 5 5 0 0 1 128.6544 172.1544 A 5 5 0 0 1 121.58403 172.1544 L 105.00003 155.5704 L 88.416032 172.1544 A 5 5 0 0 1 81.345663 172.1544 A 5 5 0 0 1 81.345663 165.08403 L 97.929663 148.50003 L 81.345663 131.91603 A 5 5 0 0 1 81.345663 124.84566 A 5 5 0 0 1 84.880848 123.38063 z " />
+  </g>
+</svg>

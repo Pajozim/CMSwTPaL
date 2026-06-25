@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+    <link href="assets/favicon.svg" rel="icon" type="image/svg+xml">
+    <link href="css/RedHatDisplayFonts.css" rel="stylesheet">
+    <link href="css/quill.snow.css" rel="stylesheet" />
+    <link href="css/styles.css" rel="stylesheet" />
+</head>
+<body>
+  
+  <section id="title">
+    <h1 id="siteTitle" contenteditable="true"></h1>  
+  </section>
+  <section id="intro">
+  
+    <div id="headline-intro" class="minButton"><h2 id="introTitle" contenteditable="true"></h2></div>
+  
+    <section id="intro-height">
+  
+      <div class="text">
+  
+        <p id="introText" contenteditable="plaintext-only"></p>
+
+      </div>
+  
+    </section>
+  
+  </section>
+  <section id="instructions">
+
+    <div id="headline-ins" class="minButton width100"><h2 id="instructionsTitle" contenteditable="true"></h2></div>
+
+    <section id="instructions-container" class="width100 column">
+    </section>
+
+  </section>
+  <section id="file-handling" class="width100 column">
+      <div id="save"><button id="save-button">Save</button></div>
+      <input type="file" id="loadFile" accept=".json" style="display:none">
+      <div id="load"><button id="load-button">Load</button></div>
+  </section>
+  <section id="footer">
+
+    <div class="text">
+      <p>Copyright © <a href="https://pajozim.github.io/aestheticsbrewery/">Aesthetics Brewery</a> . All Rights Reserved.</p>
+    </div>
+
+  </section>
+
+  
+<script src="libs/Sortable.min.js"></script>
+<script src="libs/quill.js"></script>
+<script src="libs/interact.min.js"></script>  
+<script src="libs/leader-line.min.js"></script>
+<script src="js/machinator.js"></script>
+
+</body>
+</html>
+
+<!-- To Do:
+- with interactjs I can change the colors of the boxes and bg 
+-->

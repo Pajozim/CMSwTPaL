@@ -1,0 +1,5 @@
+# Ignore folder and its contents
+assets/content/
+assets/images/
+assets/Content/
+js/repertoire.js
