@@ -86,7 +86,7 @@ function createCategory() {
   const newCatContainer                                  = document.createElement('div');
   
   newCatContainer.classList.add('CatContainer', 'row');
-  let catID = thisSessionContent.instructions.length === 0 ? 1 : thisSessionContent.instructions.length + 1;
+  let catID = thisSessionContent.instructions.length + 1;
 
   newCatContainer.id                                     = catID;
 
@@ -145,13 +145,13 @@ onEnd: function (evt) {
   clearTimeout(sortTimeout);
 
     // Set a delay of 3 seconds before sending the request
-  sortTimeout = setTimeout(() => {
+    sortTimeout = setTimeout(() => {
     // Get new order
     const newOrder = Array.from(container.children).filter((div) => div.classList.contains('KatBox')).map((div) => {
       return div.id.split('-')[1];
     });
 
-    // ----- HERE, MISSING CODE( keyword/s: newOrder (Catergory Order)) ----- //
+    
     console.log('Backend Response:', data);
     console.error('Error updating order:', error);
   }, 3000); // 3000ms = 3 seconds
@@ -304,10 +304,22 @@ document.body.addEventListener('click', (e) => {
         // delete the selected item from thisSessionContent
         const selectedItemIndex                  = thisSessionContent.instructions.findIndex(item => item.KatID === catID);
         thisSessionContent.instructions.splice(selectedItemIndex, 1);
-        //console.log("Category successfully deleted", thisSessionContent.instructions);
+
+        const newOrder = Array.from(document.getElementById('instructions-container').children).filter((div) => div.classList.contains('KatBox')).map((div, index) => {
+          div.id                                 = div.id.replace(/-(\d+)$/, `-${index + 1}`);
+          return div.id;
+        });
+
+        // update new Order onto thisSessionContent
+        thisSessionContent.instructions.forEach((item, index) => {
+          item.KatID = index + 1;
+        });      
 
         // save the updated thisSessionContent
         saveToLocalStorage(thisSessionContent);
+
+        console.log("after KatBox deletion:", thisSessionContent);
+        
       } catch (error) {
         console.error('Failed to delete category', error);
       }
