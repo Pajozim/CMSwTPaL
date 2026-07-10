@@ -9,11 +9,15 @@ let thisSessionContent     = {
   "instructions": []
 };
 
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 // Registering title and intro-text changes on static site elements
 document.querySelectorAll("#siteTitle, #introTitle, #introText, #instructionsTitle")
   .forEach((element) => {
     element.addEventListener("focus",  () => {
-      element.textContent                                                                     = "";
+      element.textContent                                                                     = "Placeholder";
     });
     element.addEventListener("blur",  () => {
       thisSessionContent.page[element.id]                                                     = element.textContent;
@@ -25,44 +29,46 @@ document.querySelectorAll("#siteTitle, #introTitle, #introText, #instructionsTit
 // Autosave progress
 // Save content whenever it changes
 function saveToLocalStorage(tSC) {
-  const data = {
-    content: tSC || thisSessionContent,
-    timestamp: Date.now()
-  };
+  const data = tSC || thisSessionContent;
   localStorage.setItem('instructionContent', JSON.stringify(data));
 }
 document.addEventListener('input', saveToLocalStorage);
 
+
 // Save project
 async function saveContent(payload) {
-  if (!payload) payload = thisSessionContent;
+  const dataToSave = payload || thisSessionContent;
 
-  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+  const blob = new Blob([JSON.stringify(dataToSave)], { type: 'application/json' })
   const a = document.createElement('a');
   a.download = 'content.json';
   a.href = URL.createObjectURL(blob);
   a.click();
   URL.revokeObjectURL(a.href);
-  
-  localStorage.clear();
-  console.log('content saved! And! important!: LocalStorage reset!');  
 }
 
 const saveButton             = document.getElementById('save-button');
 saveButton.addEventListener("click", () => saveContent(thisSessionContent));
 
-// Load
+
+// Load project
 const loadButton             = document.getElementById('load-button');
 const loadFrominput          = document.getElementById('loadFile');
 loadButton.addEventListener("click", () => loadFrominput.click());
 
 document.getElementById('loadFile').addEventListener('change', function(e) {
+  thisSessionContent = {};
+  localStorage.clear();
+  instroContainer.innerHTML        = '';
+  document.querySelectorAll("svg").forEach(svg => svg.remove());
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = function(ev) {
       const data = JSON.parse(ev.target.result);
-      thisSessionContent.push(data);
+      thisSessionContent = data;
+      //document.querySelector('.newCategoryOffer').remove();
+      saveToLocalStorage(thisSessionContent);
       updateContentToUI();
     };
     reader.readAsText(file);
@@ -71,159 +77,58 @@ document.getElementById('loadFile').addEventListener('change', function(e) {
 });
 
 
-// new category addition
-function createCategory() {
-  const savedCatName                                     = document.getElementById('inputforCatTitle').value;
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  const nCinput                                          = document.getElementById('inputforCatTitle');
-  nCinput.classList.toggle('hidden');
-  nCinput.value                                          = '';
 
-  const nctxt                                            = document.getElementById('nCtxt');
-  nCtxt.setAttribute('onclick', `changeToInput()`);
-  nCtxt.innerHTML                                        = '<h1 onclick="changeToInput()">new Category (click on me, again to name me und then go to plus button)</h1>';
+// Deletion Template
+function deleteElements(KBID, Obj = "", hash = "") {
 
-  const newCatContainer                                  = document.createElement('div');
-  
-  newCatContainer.classList.add('CatContainer', 'row');
-  let catID = thisSessionContent.instructions.length + 1;
-
-  newCatContainer.id                                     = catID;
-
-  const MoveIconBox                                      = document.createElement('div');
-  MoveIconBox.classList.add('MoveIconBox');
-  newCatContainer.appendChild(MoveIconBox);
-
-  const newCatSecContent                                 = document.createElement('section');
-  newCatSecContent.classList.add('Section', 'column');
-  newCatContainer.appendChild(newCatSecContent);
-  const CatTitle                                         = document.createElement('h2');
-  CatTitle.textContent                                   = savedCatName;
-  newCatSecContent.appendChild(CatTitle);
-  const newCatSeccontainerC                              = document.createElement('div');
-  newCatSeccontainerC.classList.add('containerC', 'bubbleContainer', 'row');
-  newCatSecContent.appendChild(newCatSeccontainerC);
-  const newCatSecContTxt                                 = document.createElement('div');
-  newCatSecContTxt.classList.add('txtColumn', 'column');
-  newCatSeccontainerC.appendChild(newCatSecContTxt);
-  const newCatSecContImg                                 = document.createElement('div');
-  newCatSecContImg.classList.add('imgColumn', 'column');
-  newCatSeccontainerC.appendChild(newCatSecContImg);
-
-  const deleteCircle                                     = document.createElement('div');
-  deleteCircle.classList.add('deleteCircleBox');
-  newCatContainer.appendChild(deleteCircle);
-
-  const payload = {
-    Katname: savedCatName,
-    KatID: catID.toString(),
-    KatMover: MoveIconBox.outerHTML,
-    KatSection: newCatSecContent.outerHTML,
-    KatContentTxt: [],
-    KatContentImg: [],
-    KatLines: [],
-    KatDelete: deleteCircle.outerHTML,
-  };
-
-  thisSessionContent["instructions"].push(payload);
-  //console.log('Category recorded into thisSessionContent:', thisSessionContent);
-
-  updateContentToUI();
-};
-
-// change Kat order
-const container = document.getElementById('instructions-container');
-let sortTimeout; // Variable to store the timeout reference
-new Sortable.create(container, {
-animation: 150,
-filter: ".EndArea, .imgreorder, .txtreorder",  // Selectors that do not lead to dragging (String or Function)
-preventOnFilter: true, // Call `event.preventDefault()` when triggered `filter`
-draggable: ".KatBox",
-direction: 'vertical',
-onEnd: function (evt) {
-  // Clear any existing timeout to avoid multiple calls
-  clearTimeout(sortTimeout);
-
-    // Set a delay of 3 seconds before sending the request
-    sortTimeout = setTimeout(() => {
-    // Get new order
-    const newOrder = Array.from(container.children).filter((div) => div.classList.contains('KatBox')).map((div) => {
-      return div.id.split('-')[1];
-    });
-
+  try {
     
-    console.log('Backend Response:', data);
-    console.error('Error updating order:', error);
-  }, 3000); // 3000ms = 3 seconds
-},
-});
+    if (!Obj && !hash) {
+      
+      // delete the selected KatBox/element and its content
+      const selectedKBx                        = document.getElementById("KatBox-" + KBID);
+      selectedKBx.querySelectorAll('[id^="SP-"]').forEach((element) => { // deleting all StartPoints elements and its LeaderLines
+        deleteLLine(element);
+        element.remove();
+      });
+      selectedKBx.querySelectorAll('[id^="EA-"]').forEach(element => element.remove()); // deleting all EndArea elements
+      selectedKBx.remove();
 
+      // delete the selected item from thisSessionContent
+      const selectedItemIndex                  = thisSessionContent.instructions.findIndex(item => item.KatID === KBID);
+      thisSessionContent.instructions.splice(selectedItemIndex, 1);
 
-// change txt order
-function ObserveTxtReorder(KatBoxID) {
-  const selectedKatBox = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
-  const txtColumn = selectedKatBox.querySelector('.txtColumn.column'); // The column of txtbubbles
+    } else {
+      
+      // removing DOM elements and LeaderLines
+      const selectedSP               = document.getElementById("SP-" + hash);
+      if (selectedSP) deleteLLine(selectedSP);
+      const EAelement                = document.getElementById("EA-" + hash);
+      if (EAelement) EAelement.remove();
+      document.querySelector(`[data-hash="${hash}"]`).remove(); // deleting the txt-/img-bubble and its children
 
-  // Create a Sortable instance only for the txtColumn within each KatBox
-  new Sortable(txtColumn, {
-    group: 'nested', // To allow nested reordering within the KatBox
-    animation: 150,
-    filter: ".geometryArea, .txtDelete",  // Selectors that do not lead to dragging (String or Function)
-    preventOnFilter: true, // Call `event.preventDefault()` when triggered `filter`
-    draggable: ".txtbubble",
-    fallbackOnBody: true,
-    swapThreshold: 0.65,
-    direction: 'vertical',
-    onEnd: function (evt) {
-      // Get the new order of txtbubbles by their IDs
-      const newtxtbubblesOrder = Array.from(txtColumn.children)
-        .filter((div) => div.classList.contains('txtbubble'))
-        .map((div) => div.id.split('-')[1]);
+      // updates thisSessionContent
+      const selectedKatBox                                     = thisSessionContent.instructions.find(item => item.KatID === KBID);
+      const selectedIndex                                      = selectedKatBox[Obj].findIndex(item => item.hashID === hash);
+      selectedKatBox[Obj].splice(selectedIndex, 1);
+      selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hashID !== hash);
 
-      // Send the new order to thisSessionContent after 3 seconds delay
-      setTimeout(() => {
-        // ----- HERE, MISSING CODE (keyword/s: { newtxtbubblesOrder, KatBoxID }) ----- //
-        const selectedItem     = thisSessionContent["instructions"].find(item => item.KatID === KatBoxID);
-        
-        console.log('Backend Response:', newtxtbubblesOrder);
-        //console.error('Error updating order:', error);
-        
-      }, 3000); // Delay of 3 seconds before sending the order to the backend
     }
-  });
-}
 
+    // saves the updated tSC
+    saveToLocalStorage(thisSessionContent);
 
-// change img order
-function ObserveImgReorder(KatBoxID) {
-const selectedKatBox = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
-const imgColumn = selectedKatBox.querySelector('.imgColumn.column'); // The column of txtbubbles
-
-// Create a Sortable instance only for the txtColumn within each KatBox
-new Sortable(imgColumn, {
-  group: 'nested', // To allow nested reordering within the KatBox
-  animation: 150,
-  filter: ".imgDelete, .EndArea, .KatBox",  // Selectors that do not lead to dragging (String or Function)
-  preventOnFilter: true, // Call `event.preventDefault()` when triggered `filter`
-  draggable: ".imgbubble",
-  fallbackOnBody: true,
-  swapThreshold: 0.65,
-  direction: 'vertical',
-  onEnd: function (evt) {
-    // Get the new order of txtbubbles by their IDs
-    const newimgbubblesOrder = Array.from(imgColumn.children)
-      .filter((div) => div.classList.contains('imgbubble'))
-      .map((div) => div.id.split('-')[1]);
-
-    // Send the new order to the backend after 3 seconds delay
-    setTimeout(() => {
-      // ----- HERE, MISSING CODE(keyword/s: { newimgbubblesOrder, KatBoxID }) ----- //
-      console.log('Backend Response:', data);
-      console.error('Error updating order:', error);
-    }, 3000); // Delay of 3 seconds before sending the order to the backend
+  } catch (error) {
+    console.error('Error deleting element:', error);
   }
-});
+
 }
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 // new category offer
 function changeToInput() {    
@@ -234,7 +139,7 @@ function changeToInput() {
     nCtxt.children[0].style.display   = 'none';
   }
   else {
-    throw new Error('No H1 found');
+    throw new Error('No h1 found');
   }
 
   const input                                    = document.querySelector('#inputforCatTitle');
@@ -242,14 +147,13 @@ function changeToInput() {
   input.focus();
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      createCategory(); 
-      document.querySelector('.newCategoryOffer').remove(); // remove newCategoryOffer
+      createCategory();
     }
   });
 
   const AddButton                                = document.querySelector('.AddButton1');
   AddButton.classList.add('AddButton2');
-  AddButton.setAttribute('onclick', `createCategory(); document.querySelector('.newCategoryOffer').remove();`);
+  AddButton.setAttribute('onclick', `createCategory()`);
 }
 
 function newCategoryOffer() {
@@ -287,45 +191,122 @@ function newCategoryOffer() {
   return newCategory;
 }
 
+// new category addition
+function createCategory() {
+  const nCinput                                          = document.getElementById('inputforCatTitle');
+  const savedCatName                                     = nCinput.value;
+  nCinput.classList.toggle('hidden');
+  nCinput.value                                          = '';
+
+  const nctxt                                            = document.getElementById('nCtxt');
+  nCtxt.setAttribute('onclick', `changeToInput()`);
+  nCtxt.innerHTML                                        = '<h1 onclick="changeToInput()">new Category (click on me to name me und then Enter/Return)</h1><input type="text" id="inputforCatTitle" class="hidden"></div>';
+
+  const newCatContainer                                  = document.createElement('div');
+  
+  newCatContainer.classList.add('CatContainer', 'row');
+  let catID = thisSessionContent.instructions.length;
+
+  newCatContainer.id                                     = catID;
+
+  const MoveIconBox                                      = document.createElement('div');
+  MoveIconBox.classList.add('MoveIconBox');
+  newCatContainer.appendChild(MoveIconBox);
+
+  const newCatSecContent                                 = document.createElement('section');
+  newCatSecContent.classList.add('Section', 'column');
+  newCatContainer.appendChild(newCatSecContent);
+  const CatTitle                                         = document.createElement('h2');
+  CatTitle.textContent                                   = savedCatName;
+  newCatSecContent.appendChild(CatTitle);
+  const newCatSeccontainerC                              = document.createElement('div');
+  newCatSeccontainerC.classList.add('containerC', 'bubbleContainer', 'row');
+  newCatSecContent.appendChild(newCatSeccontainerC);
+  const newCatSecContTxt                                 = document.createElement('div');
+  newCatSecContTxt.classList.add('txtColumn', 'column');
+  newCatSeccontainerC.appendChild(newCatSecContTxt);
+  const newCatSecContImg                                 = document.createElement('div');
+  newCatSecContImg.classList.add('imgColumn', 'column');
+  newCatSeccontainerC.appendChild(newCatSecContImg);
+
+  const deleteCircle                                     = document.createElement('div');
+  deleteCircle.classList.add('deleteCircleBox');
+  newCatContainer.appendChild(deleteCircle);
+
+  const payload = {
+    Katname: savedCatName,
+    KatID: hashVgenerator(),
+    KatMover: MoveIconBox.outerHTML,
+    KatSection: newCatSecContent.outerHTML,
+    KatContentTxt: [],
+    KatContentImg: [],
+    KatLines: [],
+    KatDelete: deleteCircle.outerHTML,
+  };
+
+  thisSessionContent["instructions"].push(payload);
+
+  updateContentToUI();
+};
+
+// change Kat order
+const instroContainer = document.getElementById('instructions-container');
+let sortTimeout; // Variable to store the timeout reference
+new Sortable.create(instroContainer, {
+  animation: 150,
+  filter: ".EndArea, .imgreorder, .txtreorder",  // Selectors that do not lead to dragging (String or Function)
+  preventOnFilter: true, // Call `event.preventDefault()` when triggered `filter`
+  draggable: ".KatBox",
+  direction: 'vertical',
+  onEnd: function (evt) {
+    // Clear any existing timeout to avoid multiple calls
+    clearTimeout(sortTimeout);
+
+    try {
+      // Set a delay of 3 seconds before sending the request
+      sortTimeout = setTimeout(() => {
+
+        console.log("5 seconds passed");
+
+        // Get new order
+        const filteredArray       = Array.from(instroContainer.children).filter(div => div.classList.contains('KatBox'));
+        const updatedInstructions = filteredArray.map((div, index) => {
+          const KBID                   = div.id.split('-')[1];
+          const selectedItem           = thisSessionContent["instructions"].find(item => item.KatID === KBID); // Grab the original instruction object, clone it, and update KatID
+          return {
+            ...selectedItem, // Shallow clone to prevent mutating mid-flight
+          };
+        });
+        thisSessionContent["instructions"] = updatedInstructions; // Overwrite the old array with re-ordered array
+        
+        //console.log("tSC after nOrder", thisSessionContent["instructions"]);
+
+        saveToLocalStorage(thisSessionContent);
+
+      }, 3000); // 3000ms = 3 seconds
+
+      saveToLocalStorage(thisSessionContent);
+
+    } catch (error) {
+      console.error(error);
+    }
+  },
+});
 
 // delete category  
 document.body.addEventListener('click', (e) => {
   if (e.target.classList.contains('deleteCircleBox')) {
-    // console.log('dCB clicked');
     const parentID                               = e.target.parentElement.id;
 
     if (parentID.startsWith('KatBox-')) {
-      // console.log('inside KatBox conditional for KatBox deletion');
       const catID                                = parentID.split('-')[1];
-      try {
-        // deöete the selected KatBox/element
-        document.getElementById(parentID).remove();
-
-        // delete the selected item from thisSessionContent
-        const selectedItemIndex                  = thisSessionContent.instructions.findIndex(item => item.KatID === catID);
-        thisSessionContent.instructions.splice(selectedItemIndex, 1);
-
-        const newOrder = Array.from(document.getElementById('instructions-container').children).filter((div) => div.classList.contains('KatBox')).map((div, index) => {
-          div.id                                 = div.id.replace(/-(\d+)$/, `-${index + 1}`);
-          return div.id;
-        });
-
-        // update new Order onto thisSessionContent
-        thisSessionContent.instructions.forEach((item, index) => {
-          item.KatID = index + 1;
-        });      
-
-        // save the updated thisSessionContent
-        saveToLocalStorage(thisSessionContent);
-
-        console.log("after KatBox deletion:", thisSessionContent);
-        
-      } catch (error) {
-        console.error('Failed to delete category', error);
-      }
+      deleteElements(catID);
     }
   }
 });
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 // new txt offer
@@ -340,7 +321,7 @@ document.addEventListener('click', (event) => {
       let hashValue;
       do {
         hashValue                                = hashVgenerator();
-        const isDuplicate                        = thisSessionContent.instructions.some(item => item.KatContentTxt.some(txt => txt.tbHashV === hashValue));
+        const isDuplicate                        = thisSessionContent.instructions.some(item => item.KatContentTxt.some(txt => txt.hashID === hashValue));
         if (isDuplicate) {
           hashValue                              = undefined;
         }
@@ -379,112 +360,180 @@ function newTxtOffer(catID) {
   Submit.innerHTML      = "<p>Submit</p>";
   newtxtcontent.appendChild(Submit);
   return newtxtcontent;
-} 
+}
 
+// txt addition
+function addTxt(catID, txtContent, hashValue) {
+  try {
+    const tSCinstro                              = thisSessionContent.instructions.find(item => item.KatID === catID);
+    tSCinstro.KatContentTxt.push({hashID: hashValue, tbContent: txtContent});
+    updateContentToUI();
+  } catch (error) {
+    console.error('Error processing task:', error);
+  }
+}
+
+// change txt order
+function ObserveTxtReorder(KatBoxID) {
+  const selectedKatBox       = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
+  const txtColumn            = selectedKatBox.querySelector('.txtColumn.column'); // The column of txtbubbles
+  const KBindex              = KatBoxID.split('-')[1];
+
+  // Create a Sortable instance only for the txtColumn within each KatBox
+  new Sortable(txtColumn, {
+    group: 'nested', // To allow nested reordering within the KatBox
+    animation: 150,
+    filter: ".geometryArea, .txtDelete",  // Selectors that do not lead to dragging (String or Function)
+    preventOnFilter: true, // Call `event.preventDefault()` when triggered `filter`
+    draggable: ".txtbubble",
+    fallbackOnBody: true,
+    swapThreshold: 0.65,
+    direction: 'vertical',
+    onEnd: function (evt) {
+      // Send the new order to thisSessionContent after 3 seconds delay
+      setTimeout(() => {
+        // Get the new order of txtbubbles by their IDs
+        const newtxtbubblesOrder       = Array.from(txtColumn.children)
+          .filter((div) => div.classList.contains('txtbubble'))
+          .map(div => {
+            const tbID                 = div.id.split('-')[1];
+            const selectedtxtbbl       = thisSessionContent["instructions"][KBindex]["KatContentTxt"].find(item => item.tbIdentifier === tbID);
+
+            return {...selectedtxtbbl};
+          });
+        
+        thisSessionContent["instructions"][KBindex]["KatContentTxt"] = newtxtbubblesOrder;
+        saveToLocalStorage(thisSessionContent);
+        
+      }, 3000); // Delay of 3 seconds before initiating the restructure
+    }
+  });
+}
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// new img offer
+const imgInput                                 = document.getElementById('image-input-element');
+imgInput.addEventListener('change', function(e) {
+    const file = this.files[0];
+    if (!file) return;
+    const catID = this.dataset.catId;
+    if (catID) imageAddition(file, catID);
+    this.value = '';
+});
 function newImgOffer(catID) {
 
   /* visual:
-    <div class="imgcontnew box">
-      <div id="image-input" class="box" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('file-input-element').click()">
-        <p>Drag & Drop deine Bilder hierher, oder klicke hier hier drauf</p>
-      </div>
+    <div class="imgcontnew box" class="box" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" onclick="document.getElementById('file-input-element').click()">
+      <p>Drag & Drop deine Bilder hierher, oder klicke hier hier drauf</p>
     </div>
   */
 
-  const newimgcontent                            = document.createElement('div');
-  newimgcontent.classList.add('imgcontnew', 'box');
-  const divImageHolder                           = document.createElement('div');
-  divImageHolder.setAttribute('data-cat-id', catID);
-  divImageHolder.classList.add('image-input', 'box');
-  divImageHolder.addEventListener('drop', (ev) => {
-    ev.preventDefault();
-    const files = ev.dataTransfer.files;
-    const catID = ev.target.getAttribute('data-cat-id'); // Retrieve the category
-    uploadImage(files, catID); // Pass the category with files
-  });
-  divImageHolder.addEventListener('dragover', (ev) => {
-    event.preventDefault(); // Required to allow dropping
-    event.dataTransfer.dropEffect = 'copy'; // Provides a visual cue that the files can be dropped
-  });
-  // Attach click handler to trigger file input and set the category ID
-  divImageHolder.addEventListener('click', () => {
-    const fileInput = document.getElementById('file-input-element');
-    fileInput.setAttribute('data-cat-id', catID); // Associate the category ID
-    fileInput.click(); // Open the file picker
-  });
-  const pDragDrop                                = document.createElement('p');
-  pDragDrop.innerText                            = 'Drag & Drop deine Bilder hierher, oder klicke hier drauf';
-  divImageHolder.appendChild(pDragDrop);
-  newimgcontent.appendChild(divImageHolder);
-  return newimgcontent;
-} 
+  const newImgContent                            = document.createElement('div');
+  newImgContent.classList.add('imgcontnew', 'box');
+  newImgContent.setAttribute('data-cat-id', catID);
 
+  // click handler
+  newImgContent.addEventListener('click', (ev) => {
+    ev.stopPropagation(); // Prevent the click event from bubbling up
+    imgInput.dataset.catId                       = catID;
+    imgInput.click(); // Open the file picker
+  });
+
+  // drag over - allow drop
+  newImgContent.addEventListener('dragover', (ev) => {
+    ev.preventDefault(); // Required to allow dropping
+    ev.dataTransfer.dropEffect                   = 'copy'; // Provides a visual cue that the files can be dropped
+  });
+
+  // drop handler
+  newImgContent.addEventListener('drop', (ev) => {
+    ev.preventDefault();
+    const files                                  = ev.dataTransfer.files;
+    imageAddition(files[0], catID);
+  });
+
+  // text
+  const pDragDrop                                = document.createElement('p');
+  pDragDrop.innerText                            = 'Drag & Drop your images here, click here on it';
+  newImgContent.appendChild(pDragDrop);
+
+  return newImgContent;
+}
 
 // img addition
-function imageShow(imgPath, catID) {
+function imageAddition(file, catID) {
 
-  const dragDropArea                                       = document.getElementById('drag-drop-area');
-
-  // Create and configure the image element
-  const imageElement                                       = document.createElement('img');
-  imageElement.id                                          = 'upl-Img';
-  imageElement.src                                         = imgPath;
-  imageElement.alt                                         = 'Uploaded image';
-  imageElement.style.display                               = 'block';
-  dragDropArea.appendChild(imageElement);
-
-  // Create and configure the delete button
-  const deleteImgButton                                    = document.createElement('div');
-  deleteImgButton.id                                       = 'deleteImg';
-  deleteImgButton.className                                = 'buttonV1';
-  deleteImgButton.innerHTML                                = '<p>Löschen</p>';
-  deleteImgButton.style.display                            = 'flex';
-  // Attach a click event directly to delete the image
-  deleteImgButton.onclick = function() {
-    imageElement.remove();          // Remove the image element
-    deleteImgButton.remove();       // Remove the delete button
-    document.getElementById('image-input').style.display   = 'flex'; // Show the image input again
-    document.getElementById('file-input-element').value    = ""; // Clear the value of the input element with id
-  };
-  // Append the delete button to the drag-drop area
-  dragDropArea.appendChild(deleteImgButton);
-
-  // Hide the image input element after image is uploaded
-  document.getElementById('image-input').style.display     = 'none';
-}
-
- function generateHash(file) {
-  const buffer                                             =  file.arrayBuffer();
-  const cryptoObj                                          = window.crypto || window.msCrypto;
-  const hashArray                                          = new Uint8Array( cryptoObj.subtle.digest("SHA-256", buffer));
-  const hash                                               = Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
-  return hash;
-}
-
- function uploadImage(files, catID) {
-  if (files.length === 0) {
-    return; // If no files selected
+  if (!file) {
+    return; // no file selected
   }
-  const file                                               = files[0];
-  const hash                                               =  generateHash(file);
-  const ThreeDigitHash                                     =  hashVgenerator();
-  const formData                                           = new FormData();
-  formData.append('image', file, `${hash}-${file.name}`);
-  formData.append('ThreeDigitHash', ThreeDigitHash);
-  formData.append('catID', catID); // Append catID to formData
-  console.log(formData);
-  // ----- HERE, MISSING CODE (keyword/s: formData) ----- //
-  console.log("Success loading image onto thisSessionContent:", formData);
-  console.error('Error loading image onto thisSessionContent:', error);
+
+  const reader                                             = new FileReader();
+  reader.onload = (e) => {
+      // find the KatBox
+      const selectedKB = thisSessionContent.instructions.find(
+          cat => cat.KatID === catID
+      );
+
+      // add too thisSessionContent
+      const imgPath = `assets/Content/images/${file.name}`
+      selectedKB.KatContentImg.push({
+          hashID: hashVgenerator(),
+          filename: file.name,
+          imgPath: imgPath,
+      });
+      
+      saveToLocalStorage(thisSessionContent);
+      updateContentToUI();
+  };
+  reader.readAsDataURL(file);
+  reader.onerror = () => {
+    console.error('Failed to read file');
+  };
+  //reader.readAsDataURL(file); // Convert to Base64
+}
+
+// change img order
+function ObserveImgReorder(KatBoxID) {
+  const selectedKatBox = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
+  const imgColumn = selectedKatBox.querySelector('.imgColumn.column'); // The column of txtbubbles
+
+  // Create a Sortable instance only for the imgColumn within each KatBox
+  new Sortable(imgColumn, {
+    group: 'nested', // To allow nested reordering within the KatBox
+    animation: 150,
+    filter: ".imgDelete, .EndArea, .KatBox",  // Selectors that do not lead to dragging (String or Function)
+    preventOnFilter: true, // Call `event.preventDefault()` when triggered `filter`
+    draggable: ".imgbubble",
+    fallbackOnBody: true,
+    swapThreshold: 0.65,
+    direction: 'vertical',
+    onEnd: function (evt) {
+      // Send the new order to the backend after 3 seconds delay
+      setTimeout(() => {
+        // Get the new order of txtbubbles by their IDs
+        const newimgbubblesOrder = Array.from(imgColumn.children)
+          .filter((div) => div.classList.contains('imgbubble'))
+          .map(div => {
+            const imgID        = div.id.split('-')[1];
+            const selectedimg  = thisSessionContent["instructions"][KatBoxID].KatContentImg.find(item => item.hashID === imgID);
+            return {...selectedimg};
+          });
+
+          // Update the order in thisSessionContent
+          thisSessionContent["instructions"][KatBoxID]["KatContentImg"] = newimgbubblesOrder;
+          saveToLocalStorage(thisSessionContent);
+        
+      }, 3000); // Delay of 3 seconds before sending the order to the backend
+    }
+  });
 }
 
 
-// img deletion  
-function deleteImage(KatID, imgID, imghash) {
-  // ----- HERE, MISSING CODE (keyword/s: KatID, imgID, imghash) ----- //
-  console.log("Image successfully deleted:", data);
-  console.error('Error deleting image:', error);
-}
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 // Quill intitializations
 function initializeQuillForNewEditors() {
@@ -496,22 +545,13 @@ function initializeQuillForNewEditors() {
 }
 
 
-// txt addition
-function addTxt(catID, txtContent, hashValue) {
-  try {
-    const tSCinstro                              = thisSessionContent.instructions.find(item => item.KatID === catID);
-    tSCinstro.KatContentTxt.push({tbHashV: hashValue, tbContent: txtContent}); 
-    //console.log("Success loading text onto thisSessionContent:", tSCinstro);
-    updateContentToUI();
-  } catch (error) {
-    console.error('Error processing task:', error);
-  }
-}
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 // indicators & line
-let allLinesData = [], line = Timer = EAstyleV = null, invisibility = false;
+let allLinesData = [], line = Timer = EAstyleV = null; //invisibility = false;
 
-function toggleIndicator(tbIdentifier, SPID) {
+function toggleIndicator(SPID, KatID) {
 
   const selectedObj = allLinesData.find(object => object.SPID === SPID);
 
@@ -528,18 +568,21 @@ function toggleIndicator(tbIdentifier, SPID) {
   }
 
   clearTimeout(Timer);
-      Timer = setTimeout(() => {
-        console.log('5 seconds have passed');
+  Timer = setTimeout(() => {
+    console.log('3 seconds have passed', SPID);
 
-        const isHidden = targetedSPID.classList.contains('invisible') ? true : false;
-        console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
-        
-        // ----- HERE, MISSING CODE (keyword/s: generalID: tbIdentifier, invisible: isHidden ) ----- //
-        console.log('Saved:', data);
-        console.error('Error saving:', error);
-      }, 3000);
+    const isHidden                 = targetedSPID.classList.contains('invisible');
+    //console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
+    
+    const selectedKB               = thisSessionContent.instructions.find(block => block.KatID === KatID);
+    const tbHash                   = SPID.split('-')[1];
+    const selectedLine             = selectedKB.KatLines.find(line => line.hashID === tbHash);
+    selectedLine.invisible         = isHidden;
 
-  return invisibility = targetedSPID.classList.contains('invisible') ? true : false
+    saveToLocalStorage(thisSessionContent);
+  }, 3000);
+
+  //invisibility        = isHidden;
 
 };
 
@@ -550,7 +593,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   let lineColor                                  = lColor || lineColors[0];
 
   // restrictors
-  const textbubble                               = document.querySelector(`[data-hash-value="${tbIdentifier}"]`);
+  const textbubble                               = document.querySelector(`[data-hash="${tbIdentifier}"]`);
   const geoArea                                  = textbubble.querySelector(`.geometryArea`);
   const KatBox                                   = textbubble.closest('.KatBox');
   const BubblesCont                              = KatBox.querySelector('.containerC.bubbleContainer.row');
@@ -558,9 +601,9 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
-  let hoveredImage                               = imgColumn.querySelector(`[data-img-hash="${hI}"]`) || imgColumn.querySelector('#imgbubble-0') || null;
+  let hoveredImage                               = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelector('#imgbubble-0') || null;
   //storing hoveredImage dimensions
-  let hIwidth, hIheight, leftPosPercent = 0, topPosPercent = 0;
+  let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
   function HIDimensions(e1, e2) {
     hIwidth  = e1 || hoveredImage.offsetWidth || 0;
     hIheight = e2 || hoveredImage.offsetHeight || 0;
@@ -750,6 +793,10 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
     }
   )
 
+  // Attach the line reference to the element
+  StartPoint._leaderLine = line;
+  //EndArea._leaderLine    = line;
+
   // window size change
   window.addEventListener('resize', function () {
     // Update the dimensions of hoveredImage
@@ -761,7 +808,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
     /*EndArea.style.transform    = `translate(0px, 0px)`;
     EndArea.setAttribute('data-x', '0');
     EndArea.setAttribute('data-y', '0'); */
-    console.log('Positions in Percentage', topPosPercent, leftPosPercent);
+    //console.log('Positions in Percentage', topPosPercent, leftPosPercent);
     EndArea.style.width        = EAwidth * hIchangeINwidth + 'px';
     EndArea.style.height       = EAheight * hIchangeINheight + 'px';
     EndArea.style.top          = hIRect.height / topPosPercent + 'px';
@@ -778,7 +825,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   const KatBoxID = KatBox.id;
   function Payload(tbIdentifier, lineColor, hI) {
     return {
-      generalID: tbIdentifier,
+      hashID: tbIdentifier,
       invisible: false,
       EAValues: {
         EAwidth: EAwidth / hoveredImage.offsetWidth,
@@ -795,17 +842,21 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
 
   EndArea.addEventListener('click', () => {
     clearTimeout(Timer);
-    Timer = setTimeout(() => {
+    Timer                    = setTimeout(() => {
       console.log('5 seconds have passed');
 
-      EAstyleV = EndArea.getAttribute('style');
-      const linePayload = Payload(tbIdentifier, lineColor, hoveredImage.dataset.imgHash);
-      console.log('linePayload:', linePayload , 'stringified:', JSON.stringify(linePayload));
+      EAstyleV               = EndArea.getAttribute('style');
+      const linePayload      = Payload(tbIdentifier, lineColor, hoveredImage.dataset.imgHash);
+      //console.log('linePayload:', linePayload , '\nstringified:', JSON.stringify(linePayload), "KatboxID:", KatBoxID);
 
-      // ----- HERE, MISSSING CODE (keyword/s: KatBoxID: KatBoxID, LeaderLine: linePayload) ----- //  
-      console.log('Saved:', data);
-      console.error('Error saving:', error);
-    }, 3000);    
+      const targetedIndex    = KatBoxID.split('-')[1];
+      const selectedKBID     = thisSessionContent["instructions"].find(item => item.KatID === targetedIndex);
+      selectedKBID.KatLines.push(linePayload);
+
+      saveToLocalStorage(thisSessionContent);
+
+      //console.log("tSC:", thisSessionContent);
+    }, 5000);    
 
   });
 
@@ -837,22 +888,25 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   // global hlButtonIns is in another <script>
 
   // hoveredImage if deleted
+  /*
   const deleteBtn   = hoveredImage.querySelector('.imgDelete');
   const imgbubbleID = hoveredImage.id.split('-')[1];
   const imgHash     = hoveredImage.dataset.imgHash;
-  console.log('allinesData ante:', allLinesData);
   deleteBtn.addEventListener('click', () => {
     allLinesData.filter(line => line.SPID === SPID);
     console.log('allinesData post:', allLinesData);
     deleteImage(KatBox.id, imgbubbleID, imgHash)
   })
+  */
 
   // bundle all SPID, LID, EAID
+  /*
   if (!invisibility) {
     setInterval(() => {
       line.position(); 
     }, 1500);
-  }  
+  }
+  */ 
   const bundle                                   = { SPID, line, EAID };
   allLinesData.push(bundle);
 
@@ -860,13 +914,25 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
 
 };
 
+function deleteLLine(element) {
+  // Guard clause: If the element wasn't found in the DOM, stop immediately
+  if (!element) {
+    console.warn("deleteLLine was called, but the element didn't exist.");
+    return; 
+  }
 
-// txtbubble deletion
-function deleteTxtBubble(txtbubbleID, KatID, tbIdentifier) {
-  // ----- HERE, MISSING CODE (keyword/s: { KatID, txtbubbleID, tbIdentifier }) ------ //
-  console.log("Success deleting txtbubble:", data); 
-  console.error('Error deleting txtbubble:', error);
+  // 1. Safely remove the LeaderLine SVG if it exists
+  if (element._leaderLine) {
+    element._leaderLine.remove();
+    element._leaderLine = null; // Clear the memory reference
+  }
+
+  // 2. Safely remove the DOM element itself
+  //element.remove(); // since parent element will be deleted, children are also deleted
 }
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 // update content without reloading page
@@ -883,7 +949,7 @@ function updateDocument(tSCpage) {
 
 function updateContentToUI() {
 
-   console.log("thisSC:", thisSessionContent);
+  console.log("thisSC:", thisSessionContent);
 
   saveToLocalStorage(thisSessionContent);
   
@@ -900,26 +966,30 @@ function updateContentToUI() {
       console.error('Invalid category data:', e);
       return;
     }
-    else if (document.getElementById(`KatBox-${e.KatID}` )) return;
-    const tempSection                                = document.createElement('section');
-    tempSection.id                                   = 'KatBox-' + e.KatID;
-    tempSection.classList.add('KatBox', 'row', 'list-group-item');
-    tempSection.addEventListener('click', function (e) {
-      if ((e.target.tagName === 'H2')){
-        this.querySelector('.instroCt.bubbleContainer.row').classList.toggle('minimize');
+
+    let tempSection, PickTxtColumn;
+    if (!document.getElementById(`KatBox-${e.KatID}`)) {
+      tempSection                          = document.createElement('section');
+      tempSection.id                       = 'KatBox-' + e.KatID;
+      tempSection.classList.add('KatBox', 'row', 'list-group-item');
+      tempSection.addEventListener('click', function (e) {
+        if ((e.target.tagName === 'H2')){
+          this.querySelector('.instroCt.bubbleContainer.row').classList.toggle('minimize');
+        }
+      });
+      tempSection.innerHTML                      = e.KatMover + e.KatSection + e.KatDelete;
+
+      const KatMover                             = tempSection.querySelector('.MoveIconBox');
+      if (!KatMover) {
+        console.error('MoveIconBox element not found');
+        return;
       }
-    });
-    tempSection.innerHTML                            = e.KatMover + e.KatSection + e.KatDelete;
-
-    const KatMover                                   = tempSection.querySelector('.MoveIconBox');
-    if (!KatMover) {
-      console.error('MoveIconBox element not found');
-      return;
+      KatMover.classList.add('glyphicon', 'glyphicon-move');
+      instroCt.appendChild(tempSection);
     }
-    KatMover.classList.add('glyphicon', 'glyphicon-move');
-    instroCt.appendChild(tempSection);
+    else tempSection                             = document.getElementById(`KatBox-${e.KatID}`);
 
-    const PickTxtColumn                              = tempSection.querySelector('.txtColumn');
+    PickTxtColumn                                = tempSection.querySelector('.txtColumn');
     if (!PickTxtColumn) {
       console.error('txtColumn element not found');
       return;
@@ -930,81 +1000,83 @@ function updateContentToUI() {
 
         //console.log("inside KatContentTxt conditional", index);
 
-        if (!txt || !txt.tbHashV || !txt.tbContent) {
+        if (!txt || !txt.hashID || !txt.tbContent) {
           console.error('Invalid txtbubble data:', txt);
           return;
         }
 
-        const reorderTab                               = document.createElement('div');
-        reorderTab.classList.add('MoveIconBox', 'txtreorder', 'glyphicon', 'glyphicon-move');
-        const KatBoxID                                 = tempSection.id;
-        ObserveTxtReorder(KatBoxID)
+        if (!document.getElementById(tempSection.id).querySelector(`#txtbubble-${index}`)) {
 
-        const htmlString                               = txt.tbContent;
-        const KContTxtBubble                           = document.createElement('div');
-        const txtbubbleorder                           = index; // Guaranteed to be valid
-        KContTxtBubble.id                              = 'txtbubble-' + txtbubbleorder;
-        KContTxtBubble.classList.add('txtbubble', 'box', 'row');
-        KContTxtBubble.innerHTML                       = htmlString;
-        KContTxtBubble.dataset.hashValue               = txt.tbHashV;
-        PickTxtColumn.appendChild(KContTxtBubble);
-        KContTxtBubble.insertAdjacentElement('afterbegin', reorderTab);
+          const reorderTab                               = document.createElement('div');
+          reorderTab.classList.add('MoveIconBox', 'txtreorder', 'glyphicon', 'glyphicon-move');
+          const KatBoxID                                 = tempSection.id;
+          ObserveTxtReorder(KatBoxID)
 
-        const geometryArea                             = document.createElement('div');
-        geometryArea.id                                = 'geometryArea-' + txtbubbleorder;
-        const gAID                                     = geometryArea.id;
-        const tbIdentifier                             = txt.tbHashV;
-        const SPID                                     = 'SP-' + `${tbIdentifier}`;
-        const EAID                                     = 'EA-' + `${tbIdentifier}`;
-        geometryArea.classList.add('geometryArea');
-        KContTxtBubble.appendChild(geometryArea); 
-        let lColor = null, hI = null;
-        let invisibility = false;
-        let EAValues = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
-        geometryArea.addEventListener('click', () => {
-          const existingLine = allLinesData.find(line => line.SPID === SPID);
-          if (!existingLine) createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
-          else toggleIndicator(tbIdentifier, SPID);
-        });       
+          const htmlString                               = txt.tbContent;
+          const KContTxtBubble                           = document.createElement('div');
+          KContTxtBubble.id                              = 'txtbubble-' + txt.hashID;
+          KContTxtBubble.classList.add('txtbubble', 'box', 'row');
+          KContTxtBubble.innerHTML                       = htmlString;
+          KContTxtBubble.dataset.hashValue               = txt.hashID;
+          PickTxtColumn.appendChild(KContTxtBubble);
+          KContTxtBubble.insertAdjacentElement('afterbegin', reorderTab);
 
-        const KCTBdelete                               = document.createElement('div');
-        KCTBdelete.classList.add('txtDelete');
-        setTimeout(() => {KCTBdelete.style.opacity  = '0';}, 5000);
-        KCTBdelete.addEventListener('mouseover', function (e) {
-          this.style.opacity                           = '1';
-          const parentElement = this.closest('.txtbubble');
-          if (parentElement) {
-            parentElement.style.border = '5px solid var(--colorseagreen)';
-          }
-          this.style.backgroundImage                   = 'url(assets/Basura.svg)';
-        });
-        KCTBdelete.addEventListener('mouseout', function (e) {
-          this.style.opacity                           = '0';
-          const parentElement                          = this.closest('.txtbubble');
+          const geometryArea                             = document.createElement('div');
+          geometryArea.id                                = 'geometryArea-' + hashID;
+          const gAID                                     = geometryArea.id;
+          const tbIdentifier                             = txt.hashID;
+          const SPID                                     = 'SP-' + `${tbIdentifier}`;
+          const EAID                                     = 'EA-' + `${tbIdentifier}`;
+          geometryArea.classList.add('geometryArea');
+          KContTxtBubble.appendChild(geometryArea); 
+          let lColor = null, hI = null;
+          let invisibility = false;
+          let EAValues = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
+          geometryArea.addEventListener('click', () => {
+            const existingLine = allLinesData.find(line => line.SPID === SPID);
+            if (!existingLine) createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            else toggleIndicator(SPID, KatBoxID.split('-')[1]);
+          });
+
+          const KCTBdelete                               = document.createElement('div');
+          KCTBdelete.classList.add('txtDelete');
+          setTimeout(() => {KCTBdelete.style.opacity  = '0';}, 15000);
+          KCTBdelete.addEventListener('mouseover', function (e) {
+            this.style.opacity                           = '1';
+            const parentElement = this.closest('.txtbubble');
             if (parentElement) {
-              parentElement.style.border = 'none';
+              parentElement.style.border = '5px solid var(--colorseagreen)';
             }
-          this.style.backgroundImage                   = 'url(assets/deleteCircle.svg)';
-        });
-        KCTBdelete.addEventListener('click', function (e) {
-          const parentElement                          = this.closest('.txtbubble');
-          const txtbubbleID                            = parentElement.id.split('-')[1];
-          const KatBox                                 = this.closest('.KatBox');
-          const KatID                                  = KatBox.id.split('-')[1];
-          if (!txtbubbleID || !KatID) {
-              return console.error('Invalid txtbubble ID or KatID:', txtbubbleID, KatID);
-          }
-          deleteTxtBubble(txtbubbleID, KatID, tbIdentifier);
-        });
-        KContTxtBubble.appendChild(KCTBdelete);
+            this.style.backgroundImage                   = 'url(assets/Basura.svg)';
+          });
+          KCTBdelete.addEventListener('mouseout', function (e) {
+            this.style.opacity                           = '0';
+            const parentElement                          = this.closest('.txtbubble');
+              if (parentElement) {
+                parentElement.style.border = 'none';
+              }
+            this.style.backgroundImage                   = 'url(assets/deleteCircle.svg)';
+          });
+          KCTBdelete.addEventListener('click', function (e) {
+            const parentElement                          = this.closest('.txtbubble');
+            const txtbubbleID                            = parentElement.id.split('-')[1];
+            const KatBox                                 = this.closest('.KatBox');
+            const KatID                                  = KatBox.id.split('-')[1];
+            if (!txtbubbleID || !KatID) {
+                return console.error('Invalid txtbubble ID or KatID:', txtbubbleID, KatID);
+            }
+            deleteTxtBubble(KatID, "KatContentTxt", tbIdentifier);
+          });
+          KContTxtBubble.appendChild(KCTBdelete);
+        }
 
       });
     }
-    
-    const txtOffer                                   = newTxtOffer(e.KatID);
-    PickTxtColumn.appendChild(txtOffer);
+  
+    const txtOffer                               = document.getElementById(tempSection.id).querySelector("#editor-container") || newTxtOffer(e.KatID);
+    PickTxtColumn.appendChild(txtOffer); 
 
-    const PickImgColumn                              = tempSection.querySelector('.imgColumn');
+    const PickImgColumn                          = tempSection.querySelector('.imgColumn');
     if (!PickImgColumn) {
       console.error('imgColumn element not found');
       return;
@@ -1015,62 +1087,65 @@ function updateContentToUI() {
           console.error('Invalid imgbubble data:', imgObj);
           return;
         }
-        const KContImgBubble                           = document.createElement('div');
-        KContImgBubble.id                              = 'imgbubble-' + e.KatContentImg.indexOf(imgObj);
-        KContImgBubble.classList.add('imgbubble', 'row');
-        KContImgBubble.dataset.imgHash                 = imgObj.ThreeDigitHash;
-        const KCIBimg                                  = document.createElement('img');
-        KCIBimg.src                                    = `/uploads/${imgObj.filename}`;
-        KContImgBubble.appendChild(KCIBimg);
 
-        const TabFORreorder                            = document.createElement('div');
-        TabFORreorder.classList.add('MoveIconBox', 'imgreorder', 'glyphicon', 'glyphicon-move');
-        const KatBoxID                                 = tempSection.id;
-        ObserveImgReorder(KatBoxID)
-        KContImgBubble.insertAdjacentElement('afterbegin', TabFORreorder);
+        if (!document.querySelector(`[data-hash="${imgObj.hashID}"]`)) {
 
-        const KCIBimgDelete                            = document.createElement('div');
-        KCIBimgDelete.classList.add('imgDelete');
-        setTimeout(() => {KCIBimgDelete.style.opacity  = '0';}, 5000);
-        KCIBimgDelete.addEventListener('mouseover', function (e) {
-          this.style.opacity                           = '1';
-          const parentElement                          = this.closest('.imgbubble');
-          parentElement.style.border                   = '5px solid var(--colorrazzmatazzo)';
-          this.style.backgroundImage                   = 'url(assets/Basura.svg)';
-        })
-        KCIBimgDelete.addEventListener('mouseout', function (e) {
-          this.style.opacity                           = '0';
-          const parentElement                          = this.closest('.imgbubble');
-          parentElement.style.border                   = 'none';
-          this.style.backgroundImage                   = 'url(assets/deleteCircle.svg)';
-        })
-        KCIBimgDelete.addEventListener('click', function (e) {
-          const parentElement                          = this.closest('.imgbubble');
-          const imghash                                = parentElement.dataset.imgHash;
-          const imgID                                  = parentElement.id.split('-')[1];
-          const KatBox                                 = this.closest('.KatBox');
-          const KatID                                  = KatBox.id.split('-')[1];
-          deleteImage(KatID, imgID, imghash);
-        })
+          const KContImgBubble                           = document.createElement('div');
+          KContImgBubble.id                              = 'imgbubble-' + imgObj.hashID;
+          KContImgBubble.classList.add('imgbubble', 'row');
+          KContImgBubble.dataset.imgHash                 = imgObj.hashID;
+          const KCIBimg                                  = document.createElement('img');
+          KCIBimg.src                                    = imgObj.imgPath;
+          KContImgBubble.appendChild(KCIBimg);
 
-        KContImgBubble.appendChild(KCIBimgDelete);
-        PickImgColumn.appendChild(KContImgBubble);
+          const TabFORreorder                            = document.createElement('div');
+          TabFORreorder.classList.add('MoveIconBox', 'imgreorder', 'glyphicon', 'glyphicon-move');
+          const KatBoxID                                 = tempSection.id;
+          ObserveImgReorder(KatBoxID)
+          KContImgBubble.insertAdjacentElement('afterbegin', TabFORreorder);
+
+          const KCIBimgDelete                            = document.createElement('div');
+          KCIBimgDelete.classList.add('imgDelete');
+          setTimeout(() => {KCIBimgDelete.style.opacity  = '0';}, 5000);
+          KCIBimgDelete.addEventListener('mouseover', function (e) {
+            this.style.opacity                           = '1';
+            const parentElement                          = this.closest('.imgbubble');
+            parentElement.style.border                   = '5px solid var(--colorrazzmatazzo)';
+            this.style.backgroundImage                   = 'url(assets/Basura.svg)';
+          })
+          KCIBimgDelete.addEventListener('mouseout', function (e) {
+            this.style.opacity                           = '0';
+            const parentElement                          = this.closest('.imgbubble');
+            parentElement.style.border                   = 'none';
+            this.style.backgroundImage                   = 'url(assets/deleteCircle.svg)';
+          })
+          KCIBimgDelete.addEventListener('click', function (e) {
+            const parentElement                          = this.closest('.imgbubble');
+            const imghash                                = parentElement.dataset.imgHash;
+            const KatBox                                 = this.closest('.KatBox');
+            const KatID                                  = KatBox.id.split('-')[1];
+            deleteImage(KatID, "KatContentImg", imghash);
+          })
+
+          KContImgBubble.appendChild(KCIBimgDelete);
+          PickImgColumn.appendChild(KContImgBubble);
+        }
       });
     }
-    const imgOffer                                   = newImgOffer(e.KatID);
+    const imgOffer                                   = document.getElementById(tempSection.id).querySelector('.imgcontnew.box') || newImgOffer(e.KatID);
     PickImgColumn.appendChild(imgOffer);
 
     if (Array.isArray(e.KatLines)) {
       e.KatLines.forEach(lineData => {
 
-        const tbIdentifier = lineData.generalID;
+        const tbIdentifier = lineData.hashID;
         const invisibility = lineData.invisible;
-        const SPID         = 'SP-' + `${lineData.generalID}`;
-        const EAID         = 'EA-' + `${lineData.generalID}`;
+        const SPID         = 'SP-' + `${lineData.hashID}`;
+        const EAID         = 'EA-' + `${lineData.hashID}`;
         const lColor       = lineData.lineColor;
 
         const hI           = lineData.hImage;
-        const hIelement    = document.querySelector(`[data-img-hash="${hI}"]`);
+        const hIelement    = document.querySelector(`[data-hash="${hI}"]`);
 
         if (hIelement === null) {
           const EAValues     = lineData.EAValues;
@@ -1107,15 +1182,18 @@ function updateContentToUI() {
 
   });
 
-  instroCt.appendChild(newCategoryOffer());
+  const newCatOffer                                  = document.querySelectorAll('.newCategoryOffer')[0] || newCategoryOffer();
+  instroCt.appendChild(newCatOffer);
 
   initializeQuillForNewEditors()
 };
 
 
-// headline buttons
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-const hlButtonintro            = document.getElementById("headline-intro");
+
+// headline buttons
+const hlButtonintro          = document.getElementById("headline-intro");
 
 hlButtonintro.addEventListener('click', function (e) {
   document.querySelector('#intro-height').classList.toggle('minimize');
@@ -1150,19 +1228,28 @@ hlButtonIns.addEventListener('click', function (e) {
   }
 });
 
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
 // first run
 // Load saved content on page load
 function loadFromLocalStorage() {
-  const saved = localStorage.getItem('instructionContent');
+  const saved                = localStorage.getItem('instructionContent');
   if (saved) {
-    //console.log('Saved content:', saved);
-    const parsedData = JSON.parse(saved);
-    thisSessionContent = parsedData.content;
+    const parsedData         = JSON.parse(saved);
+    thisSessionContent       = parsedData;
+    saveToLocalStorage(thisSessionContent);
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   loadFromLocalStorage();
   updateContentToUI();
-  //console.log('Session Content:', thisSessionContent);
 });
+
+
+// What to test/check?
+// - move txt, img and kats to check whether there is bugfree execution
+// - check whether all boxes resizes proportionally
+// - catbox and txtbbl deletion need to delete also any LeaderLines

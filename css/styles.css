@@ -322,6 +322,7 @@
       }
 
       #file-handling button {
+        cursor: pointer;
         background-color: var(--font-color2);
         color: var(--bg-color);
         font-weight: 600;
@@ -565,11 +566,11 @@
         background-color: var(--colorseagreen);
       }
 
-      .image-input, .image-input * {
+      .imgcontnew, .imgcontnew * {
         cursor: pointer;
       }
 
-      .image-input {
+      .imgcontnew {
         align-items: center;
       }
 
