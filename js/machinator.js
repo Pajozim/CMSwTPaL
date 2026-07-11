@@ -12,7 +12,6 @@ let thisSessionContent     = {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
 // Registering title and intro-text changes on static site elements
 document.querySelectorAll("#siteTitle, #introTitle, #introText, #instructionsTitle")
   .forEach((element) => {
@@ -60,6 +59,7 @@ document.getElementById('loadFile').addEventListener('change', function(e) {
   thisSessionContent = {};
   localStorage.clear();
   instroContainer.innerHTML        = '';
+  allLinesData                     = [];
   document.querySelectorAll("svg").forEach(svg => svg.remove());
   const file = e.target.files[0];
   if (file) {
@@ -80,7 +80,7 @@ document.getElementById('loadFile').addEventListener('change', function(e) {
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-// Deletion Template
+// Delete Elements (KatBox, txtbubble, imgbubble and LLines) Template
 function deleteElements(KBID, Obj = "", hash = "") {
 
   try {
@@ -88,7 +88,7 @@ function deleteElements(KBID, Obj = "", hash = "") {
     if (!Obj && !hash) {
       
       // delete the selected KatBox/element and its content
-      const selectedKBx                        = document.getElementById("KatBox-" + KBID);
+      const selectedKBx                          = document.getElementById("KatBox-" + KBID);
       selectedKBx.querySelectorAll('[id^="SP-"]').forEach((element) => { // deleting all StartPoints elements and its LeaderLines
         deleteLLine(element);
         element.remove();
@@ -97,7 +97,7 @@ function deleteElements(KBID, Obj = "", hash = "") {
       selectedKBx.remove();
 
       // delete the selected item from thisSessionContent
-      const selectedItemIndex                  = thisSessionContent.instructions.findIndex(item => item.KatID === KBID);
+      const selectedItemIndex                    = thisSessionContent.instructions.findIndex(item => item.KatID === KBID);
       thisSessionContent.instructions.splice(selectedItemIndex, 1);
 
     } else {
@@ -113,9 +113,13 @@ function deleteElements(KBID, Obj = "", hash = "") {
       const selectedKatBox                                     = thisSessionContent.instructions.find(item => item.KatID === KBID);
       const selectedIndex                                      = selectedKatBox[Obj].findIndex(item => item.hashID === hash);
       selectedKatBox[Obj].splice(selectedIndex, 1);
-      selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hashID !== hash);
+      selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hashID !== hash || item.hImage !== hash);
 
     }
+
+    // delete the line
+    //console.log("allLinesData:", allLinesData, "hash", hash);
+    allLinesData                               = allLinesData.filter(item => item.SPID !== "SP-" + hash);
 
     // saves the updated tSC
     saveToLocalStorage(thisSessionContent);
@@ -125,6 +129,24 @@ function deleteElements(KBID, Obj = "", hash = "") {
   }
 
 }
+
+// Reposition LeaderLines on size (and supposedly position) changes
+const resizeObserver = new ResizeObserver((entries) => {
+  // This loop runs whenever ANY observed element changes size
+  for (let entry of entries) {
+    const element = entry.target;
+    
+    // If this element has a leader line attached, reposition it!
+    if (element._leaderLine) {
+      element._leaderLine.position();
+    }
+  }
+});
+/* 2. Tell it which elements to watch
+Whenever you create a StartPoint or EndArea, pass it to the observer:
+resizeObserver.observe(StartPoint);
+resizeObserver.observe(EndArea);
+*/
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -266,7 +288,7 @@ new Sortable.create(instroContainer, {
       // Set a delay of 3 seconds before sending the request
       sortTimeout = setTimeout(() => {
 
-        console.log("5 seconds passed");
+        console.log("3 seconds passed");
 
         // Get new order
         const filteredArray       = Array.from(instroContainer.children).filter(div => div.classList.contains('KatBox'));
@@ -375,9 +397,11 @@ function addTxt(catID, txtContent, hashValue) {
 
 // change txt order
 function ObserveTxtReorder(KatBoxID) {
+
   const selectedKatBox       = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
   const txtColumn            = selectedKatBox.querySelector('.txtColumn.column'); // The column of txtbubbles
-  const KBindex              = KatBoxID.split('-')[1];
+  const KBHash               = KatBoxID.split('-')[1];
+  const selectedKB           = thisSessionContent.instructions.find(block => block.KatID === KBHash);
 
   // Create a Sortable instance only for the txtColumn within each KatBox
   new Sortable(txtColumn, {
@@ -396,13 +420,13 @@ function ObserveTxtReorder(KatBoxID) {
         const newtxtbubblesOrder       = Array.from(txtColumn.children)
           .filter((div) => div.classList.contains('txtbubble'))
           .map(div => {
-            const tbID                 = div.id.split('-')[1];
-            const selectedtxtbbl       = thisSessionContent["instructions"][KBindex]["KatContentTxt"].find(item => item.tbIdentifier === tbID);
+            const tbHash               = div.id.split('-')[1];
+            const selectedtxtbbl       = selectedKB["KatContentTxt"].find(item => item.hashID === tbHash);
 
             return {...selectedtxtbbl};
           });
         
-        thisSessionContent["instructions"][KBindex]["KatContentTxt"] = newtxtbubblesOrder;
+        selectedKB["KatContentTxt"]    = newtxtbubblesOrder;
         saveToLocalStorage(thisSessionContent);
         
       }, 3000); // Delay of 3 seconds before initiating the restructure
@@ -497,8 +521,11 @@ function imageAddition(file, catID) {
 
 // change img order
 function ObserveImgReorder(KatBoxID) {
-  const selectedKatBox = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
-  const imgColumn = selectedKatBox.querySelector('.imgColumn.column'); // The column of txtbubbles
+
+  const selectedKatBox       = document.getElementById(KatBoxID); // Correctly selecting the KatBox by ID
+  const imgColumn            = selectedKatBox.querySelector('.imgColumn.column'); // The column of txtbubbles
+  const KBHash               = selectedKatBox.id.split('-')[1];
+  const selectedKB           = thisSessionContent["instructions"].find(block => block.KatID === KBHash);
 
   // Create a Sortable instance only for the imgColumn within each KatBox
   new Sortable(imgColumn, {
@@ -518,12 +545,12 @@ function ObserveImgReorder(KatBoxID) {
           .filter((div) => div.classList.contains('imgbubble'))
           .map(div => {
             const imgID        = div.id.split('-')[1];
-            const selectedimg  = thisSessionContent["instructions"][KatBoxID].KatContentImg.find(item => item.hashID === imgID);
+            const selectedimg  = selectedKB.KatContentImg.find(item => item.hashID === imgID);
             return {...selectedimg};
           });
 
           // Update the order in thisSessionContent
-          thisSessionContent["instructions"][KatBoxID]["KatContentImg"] = newimgbubblesOrder;
+          selectedKB["KatContentImg"] = newimgbubblesOrder;
           saveToLocalStorage(thisSessionContent);
         
       }, 3000); // Delay of 3 seconds before sending the order to the backend
@@ -586,7 +613,9 @@ function toggleIndicator(SPID, KatID) {
 
 };
 
-function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI) {
+function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI) {
+
+  //console.log('tbIdentifier:', tbIdentifier, 'invisibility:', invisibility, 'SPID:', SPID, 'EAID:', EAID, 'lColor:', lColor, 'EAValues:', EAValues, 'hI:', hI);
 
   // colors
   const lineColors                               = ['orange', 'white', 'tomato', 'sandybrown', 'springgreen', 'yellow', 'fuchsia', 'sienna', 'crimson', 'deeppink'];
@@ -601,7 +630,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
-  let hoveredImage                               = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelector('#imgbubble-0') || null;
+  let hoveredImage                               = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
   //storing hoveredImage dimensions
   let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
   function HIDimensions(e1, e2) {
@@ -615,7 +644,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   const StartPoint                               = document.createElement('div');
   StartPoint.classList.add('StartPoint');
   if (invisibility) StartPoint.classList.add('invisible');
-  StartPoint.id                                  = SPID; // Create a unique ID for the StartPoint
+  StartPoint.id                                  = SPID;
   StartPoint.style.backgroundColor               = lineColor;
   geoArea.appendChild(StartPoint);
 
@@ -796,6 +825,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   // Attach the line reference to the element
   StartPoint._leaderLine = line;
   //EndArea._leaderLine    = line;
+  resizeObserver.observe(StartPoint); // entry to the ResizeObserver
 
   // window size change
   window.addEventListener('resize', function () {
@@ -843,10 +873,10 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   EndArea.addEventListener('click', () => {
     clearTimeout(Timer);
     Timer                    = setTimeout(() => {
-      console.log('5 seconds have passed');
+      console.log('3 seconds have passed');
 
       EAstyleV               = EndArea.getAttribute('style');
-      const linePayload      = Payload(tbIdentifier, lineColor, hoveredImage.dataset.imgHash);
+      const linePayload      = Payload(tbIdentifier, lineColor, hoveredImage.dataset.hash);
       //console.log('linePayload:', linePayload , '\nstringified:', JSON.stringify(linePayload), "KatboxID:", KatBoxID);
 
       const targetedIndex    = KatBoxID.split('-')[1];
@@ -856,7 +886,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
       saveToLocalStorage(thisSessionContent);
 
       //console.log("tSC:", thisSessionContent);
-    }, 5000);    
+    }, 3000);    
 
   });
 
@@ -891,7 +921,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
   /*
   const deleteBtn   = hoveredImage.querySelector('.imgDelete');
   const imgbubbleID = hoveredImage.id.split('-')[1];
-  const imgHash     = hoveredImage.dataset.imgHash;
+  const imgHash     = hoveredImage.dataset.hash;
   deleteBtn.addEventListener('click', () => {
     allLinesData.filter(line => line.SPID === SPID);
     console.log('allinesData post:', allLinesData);
@@ -906,7 +936,7 @@ function createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues
       line.position(); 
     }, 1500);
   }
-  */ 
+  */
   const bundle                                   = { SPID, line, EAID };
   allLinesData.push(bundle);
 
@@ -974,7 +1004,7 @@ function updateContentToUI() {
       tempSection.classList.add('KatBox', 'row', 'list-group-item');
       tempSection.addEventListener('click', function (e) {
         if ((e.target.tagName === 'H2')){
-          this.querySelector('.instroCt.bubbleContainer.row').classList.toggle('minimize');
+          this.querySelector('.containerC.bubbleContainer.row').classList.toggle('minimize');
         }
       });
       tempSection.innerHTML                      = e.KatMover + e.KatSection + e.KatDelete;
@@ -1005,7 +1035,7 @@ function updateContentToUI() {
           return;
         }
 
-        if (!document.getElementById(tempSection.id).querySelector(`#txtbubble-${index}`)) {
+        if (!document.getElementById(tempSection.id).querySelector(`#txtbubble-${txt.hashID}`)) {
 
           const reorderTab                               = document.createElement('div');
           reorderTab.classList.add('MoveIconBox', 'txtreorder', 'glyphicon', 'glyphicon-move');
@@ -1017,24 +1047,24 @@ function updateContentToUI() {
           KContTxtBubble.id                              = 'txtbubble-' + txt.hashID;
           KContTxtBubble.classList.add('txtbubble', 'box', 'row');
           KContTxtBubble.innerHTML                       = htmlString;
-          KContTxtBubble.dataset.hashValue               = txt.hashID;
+          KContTxtBubble.dataset.hash                    = txt.hashID;
           PickTxtColumn.appendChild(KContTxtBubble);
           KContTxtBubble.insertAdjacentElement('afterbegin', reorderTab);
 
           const geometryArea                             = document.createElement('div');
-          geometryArea.id                                = 'geometryArea-' + hashID;
+          geometryArea.id                                = 'geometryArea-' + txt.hashID;
           const gAID                                     = geometryArea.id;
           const tbIdentifier                             = txt.hashID;
           const SPID                                     = 'SP-' + `${tbIdentifier}`;
           const EAID                                     = 'EA-' + `${tbIdentifier}`;
           geometryArea.classList.add('geometryArea');
           KContTxtBubble.appendChild(geometryArea); 
-          let lColor = null, hI = null;
-          let invisibility = false;
-          let EAValues = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
+          let lColor = hI    = null;
+          let invisibility   = false;
+          let EAValues       = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
           geometryArea.addEventListener('click', () => {
             const existingLine = allLinesData.find(line => line.SPID === SPID);
-            if (!existingLine) createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            if (!existingLine) createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
             else toggleIndicator(SPID, KatBoxID.split('-')[1]);
           });
 
@@ -1065,7 +1095,7 @@ function updateContentToUI() {
             if (!txtbubbleID || !KatID) {
                 return console.error('Invalid txtbubble ID or KatID:', txtbubbleID, KatID);
             }
-            deleteTxtBubble(KatID, "KatContentTxt", tbIdentifier);
+            deleteElements(KatID, "KatContentTxt", tbIdentifier);
           });
           KContTxtBubble.appendChild(KCTBdelete);
         }
@@ -1093,7 +1123,7 @@ function updateContentToUI() {
           const KContImgBubble                           = document.createElement('div');
           KContImgBubble.id                              = 'imgbubble-' + imgObj.hashID;
           KContImgBubble.classList.add('imgbubble', 'row');
-          KContImgBubble.dataset.imgHash                 = imgObj.hashID;
+          KContImgBubble.dataset.hash                    = imgObj.hashID;
           const KCIBimg                                  = document.createElement('img');
           KCIBimg.src                                    = imgObj.imgPath;
           KContImgBubble.appendChild(KCIBimg);
@@ -1121,10 +1151,10 @@ function updateContentToUI() {
           })
           KCIBimgDelete.addEventListener('click', function (e) {
             const parentElement                          = this.closest('.imgbubble');
-            const imghash                                = parentElement.dataset.imgHash;
+            const hash                                   = parentElement.dataset.hash;
             const KatBox                                 = this.closest('.KatBox');
             const KatID                                  = KatBox.id.split('-')[1];
-            deleteImage(KatID, "KatContentImg", imghash);
+            deleteElements(KatID, "KatContentImg", hash);
           })
 
           KContImgBubble.appendChild(KCIBimgDelete);
@@ -1138,32 +1168,30 @@ function updateContentToUI() {
     if (Array.isArray(e.KatLines)) {
       e.KatLines.forEach(lineData => {
 
-        const tbIdentifier = lineData.hashID;
-        const invisibility = lineData.invisible;
-        const SPID         = 'SP-' + `${lineData.hashID}`;
-        const EAID         = 'EA-' + `${lineData.hashID}`;
-        const lColor       = lineData.lineColor;
+        const tbIdentifier   = lineData.hashID;
+        const invisibility   = lineData.invisible;
+        const SPID           = 'SP-' + `${lineData.hashID}`;
+        const EAID           = 'EA-' + `${lineData.hashID}`;
+        const lColor         = lineData.lineColor;
 
-        const hI           = lineData.hImage;
-        const hIelement    = document.querySelector(`[data-hash="${hI}"]`);
+        const hI             = lineData.hImage;
+        const hIelement      = document.querySelector(`[data-hash="${hI}"]`);
 
         if (hIelement === null) {
           const EAValues     = lineData.EAValues;
-          console.log(EAValues);
-          createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
-        } 
-        else {
+          createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+        } else {
           const img          = hIelement.querySelector('img');
         
           img.addEventListener('load', () => {
-            const hIRect = hIelement.getBoundingClientRect();
+            const hIRect     = hIelement.getBoundingClientRect();
 
             const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
 
-            const scaleX = hIRect.width;
-            const scaleY = hIRect.height;
+            const scaleX     = hIRect.width;
+            const scaleY     = hIRect.height;
 
-            const EAValues = {
+            const EAValues   = {
               EAleft: `${scaleX / EAleft}px`,
               EAtop: `${scaleY / EAtop}px`,
               EAwidth: `${scaleX * EAwidth}px`,
@@ -1171,11 +1199,9 @@ function updateContentToUI() {
               EAtransform: EAtransform
             };
 
-            createTXTtoIMG(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
           });
-
-        }
-        
+        }      
       });
 
     };
@@ -1200,10 +1226,10 @@ hlButtonintro.addEventListener('click', function (e) {
   this.classList.toggle('changedState');
 });
 
-const hlButtonIns            = document.getElementById("headline-ins");
+const hlButtonInstro         = document.getElementById("headline-instro");
 let isCollapsed2             = false;
 
-hlButtonIns.addEventListener('click', function (e) {
+hlButtonInstro.addEventListener('click', function (e) {
   document.querySelector('#instructions-container').classList.toggle('minimize'); 
   this.classList.toggle('changedState'); 
   this.classList.toggle('width100');
@@ -1216,7 +1242,7 @@ hlButtonIns.addEventListener('click', function (e) {
     })
   }
   else {
-    const allBCboxes             = document.querySelectorAll('.instroCt.bubbleContainer');
+    const allBCboxes             = document.querySelectorAll('.containerC.bubbleContainer');
     allBCboxes.forEach(BCbox => {
       allLinesData.forEach(Obj => {
         const DOMelement  = document.getElementById(Obj.SPID);
@@ -1248,6 +1274,11 @@ document.addEventListener('DOMContentLoaded', () => {
   updateContentToUI();
 });
 
+/*
+setTimeout(() => {
+  console.log("bubbleContainer class exist:", document.querySelectorAll('.bubbleContainer'));
+}, 5000);
+*/
 
 // What to test/check?
 // - move txt, img and kats to check whether there is bugfree execution
