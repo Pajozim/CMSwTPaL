@@ -89,7 +89,7 @@ function deleteElements(KBID, Obj = "", hash = "") {
       
       // delete the selected KatBox/element and its content
       const selectedKBx                          = document.getElementById("KatBox-" + KBID);
-      selectedKBx.querySelectorAll('[id^="SP-"]').forEach((element) => { // deleting all StartPoints elements and its LeaderLines
+      selectedKBx.querySelectorAll('[id^="SP-"]').forEach((element) => { // deleting all txtbubble elements and its LeaderLines
         deleteLLine(element);
         element.remove();
       });
@@ -290,11 +290,16 @@ new Sortable.create(instroContainer, {
 
         console.log("3 seconds passed");
 
+        // update the LeaderLines
+        const selectedSPs              = document.querySelectorAll('.StartPoint');
+        if (selectedSPs) selectedSPs.forEach(sp => sp._leaderLine?.position());
+
         // Get new order
-        const filteredArray       = Array.from(instroContainer.children).filter(div => div.classList.contains('KatBox'));
-        const updatedInstructions = filteredArray.map((div, index) => {
-          const KBID                   = div.id.split('-')[1];
-          const selectedItem           = thisSessionContent["instructions"].find(item => item.KatID === KBID); // Grab the original instruction object, clone it, and update KatID
+        const filteredArray            = Array.from(instroContainer.children).filter(div => div.classList.contains('KatBox'));
+        const updatedInstructions      = filteredArray.map((div, index) => {
+
+          const KBID                        = div.id.split('-')[1];
+          const selectedItem                = thisSessionContent["instructions"].find(item => item.KatID === KBID); // Grab the original instruction object, clone it, and update KatID
           return {
             ...selectedItem, // Shallow clone to prevent mutating mid-flight
           };
@@ -420,12 +425,14 @@ function ObserveTxtReorder(KatBoxID) {
         const newtxtbubblesOrder       = Array.from(txtColumn.children)
           .filter((div) => div.classList.contains('txtbubble'))
           .map(div => {
+            const selectedSP           = div.querySelector('.StartPoint');
+            if (selectedSP) selectedSP._leaderLine.position();
             const tbHash               = div.id.split('-')[1];
             const selectedtxtbbl       = selectedKB["KatContentTxt"].find(item => item.hashID === tbHash);
 
             return {...selectedtxtbbl};
           });
-        
+
         selectedKB["KatContentTxt"]    = newtxtbubblesOrder;
         saveToLocalStorage(thisSessionContent);
         
@@ -540,12 +547,19 @@ function ObserveImgReorder(KatBoxID) {
     onEnd: function (evt) {
       // Send the new order to the backend after 3 seconds delay
       setTimeout(() => {
+
+        // update the LeaderLine positions
+        const selectedSPs              = selectedKatBox.querySelectorAll('.StartPoint');
+        if (selectedSPs) selectedSPs.forEach(sSP => {
+          sSP._leaderLine?.position(); // if (sSP._leaderLine) sSP._leaderLine.position();
+        });
+
         // Get the new order of txtbubbles by their IDs
-        const newimgbubblesOrder = Array.from(imgColumn.children)
+        const newimgbubblesOrder       = Array.from(imgColumn.children)
           .filter((div) => div.classList.contains('imgbubble'))
           .map(div => {
-            const imgID        = div.id.split('-')[1];
-            const selectedimg  = selectedKB.KatContentImg.find(item => item.hashID === imgID);
+            const imgID                = div.id.split('-')[1];
+            const selectedimg          = selectedKB.KatContentImg.find(item => item.hashID === imgID);
             return {...selectedimg};
           });
 
@@ -825,7 +839,9 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   // Attach the line reference to the element
   StartPoint._leaderLine = line;
   //EndArea._leaderLine    = line;
-  resizeObserver.observe(StartPoint); // entry to the ResizeObserver
+
+  // entry to the ResizeObserver (for registering any movements for updating the start point of this LeaderLine)
+  resizeObserver.observe(StartPoint);
 
   // window size change
   window.addEventListener('resize', function () {
