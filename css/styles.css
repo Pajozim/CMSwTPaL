@@ -495,7 +495,7 @@
         max-width: 50%;
       }
 
-      .txtColumn, .imgColumn {
+      .txt  , .imgColumn {
         padding: 1%;
       }
 
@@ -514,12 +514,20 @@
         align-items: center;
       }
 
+      .KCTBth {
+        width: auto;
+        margin-right: 15%;
+      }
+
+      .KCTBth p {
+        width: 100%;
+      }
+
       .geometryArea {
         cursor: crosshair;
-        position: relative;
+        position: absolute;
         width: auto;
         height: 100%;
-        position: absolute;
         top: 0;
         right: 5%;
         background-color: var(--colorseagreen);

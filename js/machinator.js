@@ -358,7 +358,7 @@ document.addEventListener('click', (event) => {
       const correspondingQuill                   = document.querySelector('#quill-editor-' + catID);
       const closestOFquill                       = correspondingQuill.querySelector('.ql-editor');
       const txtContent                           = closestOFquill.innerHTML;
-      addTxt(catID, txtContent, hashValue);
+      addTxtbubble(catID, txtContent, hashValue);
     }
   });
 
@@ -390,7 +390,7 @@ function newTxtOffer(catID) {
 }
 
 // txt addition
-function addTxt(catID, txtContent, hashValue) {
+function addTxtbubble(catID, txtContent, hashValue) {
   try {
     const tSCinstro                              = thisSessionContent.instructions.find(item => item.KatID === catID);
     tSCinstro.KatContentTxt.push({hashID: hashValue, tbContent: txtContent});
@@ -589,7 +589,7 @@ function initializeQuillForNewEditors() {
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-// indicators & line
+// indicators & LeaderLines
 let allLinesData = [], line = Timer = EAstyleV = null; //invisibility = false;
 
 function toggleIndicator(SPID, KatID) {
@@ -644,12 +644,12 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
-  let hoveredImage                               = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
-  //storing hoveredImage dimensions
+  let ImageHolder                               = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
+  //storing ImageHolder dimensions
   let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
   function HIDimensions(e1, e2) {
-    hIwidth  = e1 || hoveredImage.offsetWidth || 0;
-    hIheight = e2 || hoveredImage.offsetHeight || 0;
+    hIwidth  = e1 || ImageHolder.offsetWidth || 0;
+    hIheight = e2 || ImageHolder.offsetHeight || 0;
   }
 
   HIDimensions();
@@ -677,7 +677,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   EndArea.style.transform                        = EAValues.EAtransform;
   EndArea.setAttribute('data-x', '0');
   EndArea.setAttribute('data-y', '0');
-  hoveredImage.appendChild(EndArea);
+  ImageHolder.appendChild(EndArea);
   // storing EndArea dimensions
   let EAwidth, EAheight;
   function EADimensions(e1, e2) {
@@ -711,10 +711,10 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   // this function is used later in the resizing and gesture demos
   window.dragMoveListener = dragMoveListener
 
-  // getting the relation of EndArea to the hoveredImage
+  // getting the relation of EndArea to the ImageHolder
   function EAtohIrelValues() {
     const EARect           = EndArea.getBoundingClientRect();
-    const hoverImageRect   = hoveredImage.getBoundingClientRect();
+    const hoverImageRect   = ImageHolder.getBoundingClientRect();
     deltax                 = EARect.left - hoverImageRect.left;
     deltay                 = EARect.top - hoverImageRect.top;
     hIwidth                = hoverImageRect.width;
@@ -800,7 +800,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
         // Cache layout values if necessary
         const EndAreaRect                = EndArea.getBoundingClientRect();
-        const hvrdImageRect              = hoveredImage.getBoundingClientRect();
+        const hvrdImageRect              = ImageHolder.getBoundingClientRect();
         
         if (!isOverlapping(EndAreaRect, hvrdImageRect)) {
           // Iterate over images and check overlap without forcing multiple reflows
@@ -808,7 +808,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
             const imgRect                = img.getBoundingClientRect(); // Cache layout data for each image
             if (img && isOverlapping(EndAreaRect, imgRect)) {
-              hoveredImage               = img;
+              ImageHolder               = img;
               img.insertAdjacentElement('afterbegin', EndArea);
               EndArea.style.top = EndArea.style.left = '0';
               EndArea.style.transform                = 'translate(0, 0)';
@@ -845,8 +845,8 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
   // window size change
   window.addEventListener('resize', function () {
-    // Update the dimensions of hoveredImage
-    const hIRect               = hoveredImage.getBoundingClientRect();
+    // Update the dimensions of ImageHolder
+    const hIRect               = ImageHolder.getBoundingClientRect();
     const hIchangeINwidth      = hIRect.width / hIwidth;
     const hIchangeINheight     = hIRect.height / hIheight;
 
@@ -874,8 +874,8 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
       hashID: tbIdentifier,
       invisible: false,
       EAValues: {
-        EAwidth: EAwidth / hoveredImage.offsetWidth,
-        EAheight: EAheight / hoveredImage.offsetHeight,
+        EAwidth: EAwidth / ImageHolder.offsetWidth,
+        EAheight: EAheight / ImageHolder.offsetHeight,
         EAtop: topPosPercent,
         EAleft: leftPosPercent,
         EAtransform: 'transform(0, 0)'
@@ -892,7 +892,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
       console.log('3 seconds have passed');
 
       EAstyleV               = EndArea.getAttribute('style');
-      const linePayload      = Payload(tbIdentifier, lineColor, hoveredImage.dataset.hash);
+      const linePayload      = Payload(tbIdentifier, lineColor, ImageHolder.dataset.hash);
       //console.log('linePayload:', linePayload , '\nstringified:', JSON.stringify(linePayload), "KatboxID:", KatBoxID);
 
       const targetedIndex    = KatBoxID.split('-')[1];
@@ -933,11 +933,11 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   });
   // global hlButtonIns is in another <script>
 
-  // hoveredImage if deleted
+  // ImageHolder if deleted
   /*
-  const deleteBtn   = hoveredImage.querySelector('.imgDelete');
-  const imgbubbleID = hoveredImage.id.split('-')[1];
-  const imgHash     = hoveredImage.dataset.hash;
+  const deleteBtn   = ImageHolder.querySelector('.imgDelete');
+  const imgbubbleID = ImageHolder.id.split('-')[1];
+  const imgHash     = ImageHolder.dataset.hash;
   deleteBtn.addEventListener('click', () => {
     allLinesData.filter(line => line.SPID === SPID);
     console.log('allinesData post:', allLinesData);
@@ -1058,14 +1058,19 @@ function updateContentToUI() {
           const KatBoxID                                 = tempSection.id;
           ObserveTxtReorder(KatBoxID)
 
-          const htmlString                               = txt.tbContent;
           const KContTxtBubble                           = document.createElement('div');
           KContTxtBubble.id                              = 'txtbubble-' + txt.hashID;
           KContTxtBubble.classList.add('txtbubble', 'box', 'row');
-          KContTxtBubble.innerHTML                       = htmlString;
           KContTxtBubble.dataset.hash                    = txt.hashID;
           PickTxtColumn.appendChild(KContTxtBubble);
           KContTxtBubble.insertAdjacentElement('afterbegin', reorderTab);
+
+          const KCTBtxtholder                            = document.createElement('div');
+          KCTBtxtholder.id                               = 'KCTBth-' + txt.hashID;
+          KCTBtxtholder.classList.add('KCTBth', 'column');
+          KCTBtxtholder.innerHTML                        = txt.tbContent;
+          reorderTab.insertAdjacentElement('afterend', KCTBtxtholder);
+          
 
           const geometryArea                             = document.createElement('div');
           geometryArea.id                                = 'geometryArea-' + txt.hashID;
@@ -1190,36 +1195,31 @@ function updateContentToUI() {
         const EAID           = 'EA-' + `${lineData.hashID}`;
         const lColor         = lineData.lineColor;
 
-        const hI             = lineData.hImage;
-        const hIelement      = document.querySelector(`[data-hash="${hI}"]`);
+        const hIelement      = document.querySelector(`[data-hash="${lineData.hImage}"]`);
 
-        if (hIelement === null) {
-          const EAValues     = lineData.EAValues;
-          createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
-        } else {
-          const img          = hIelement.querySelector('img');
+        if (hIelement === null) console.warn(`No image found for line with hashID: ${lineData.hImage}`);
         
-          img.addEventListener('load', () => {
-            const hIRect     = hIelement.getBoundingClientRect();
+        const img            = hIelement.querySelector('img');
+      
+        img.addEventListener('load', () => {
+          const hIRect       = hIelement.getBoundingClientRect();
 
-            const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
+          const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
 
-            const scaleX     = hIRect.width;
-            const scaleY     = hIRect.height;
+          const scaleX       = hIRect.width;
+          const scaleY       = hIRect.height;
 
-            const EAValues   = {
-              EAleft: `${scaleX / EAleft}px`,
-              EAtop: `${scaleY / EAtop}px`,
-              EAwidth: `${scaleX * EAwidth}px`,
-              EAheight: `${scaleY * EAheight}px`,
-              EAtransform: EAtransform
-            };
+          const EAValues     = {
+            EAleft: `${scaleX / EAleft}px`,
+            EAtop: `${scaleY / EAtop}px`,
+            EAwidth: `${scaleX * EAwidth}px`,
+            EAheight: `${scaleY * EAheight}px`,
+            EAtransform: EAtransform
+          };
 
-            createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
-          });
-        }      
+          createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+        });
       });
-
     };
 
   });
@@ -1290,13 +1290,5 @@ document.addEventListener('DOMContentLoaded', () => {
   updateContentToUI();
 });
 
-/*
-setTimeout(() => {
-  console.log("bubbleContainer class exist:", document.querySelectorAll('.bubbleContainer'));
-}, 5000);
-*/
-
 // What to test/check?
-// - move txt, img and kats to check whether there is bugfree execution
-// - check whether all boxes resizes proportionally
-// - catbox and txtbbl deletion need to delete also any LeaderLines
+// - h2 headline (including the instro h2) buttons do not let always show the LeaderLines, correction: it shows, but does not update position
