@@ -6,7 +6,8 @@ let thisSessionContent     = {
     "introText": "Write here your introduction text",
     "instructionsTitle": "Click on me to edit the instructions title",
   },
-  "instructions": []
+  "instructions": [],
+  "theme": "default"
 };
 
 
@@ -130,23 +131,20 @@ function deleteElements(KBID, Obj = "", hash = "") {
 
 }
 
-// Reposition LeaderLines on size (and supposedly position) changes
-const resizeObserver = new ResizeObserver((entries) => {
-  // This loop runs whenever ANY observed element changes size
-  for (let entry of entries) {
-    const element = entry.target;
-    
-    // If this element has a leader line attached, reposition it!
-    if (element._leaderLine) {
-      element._leaderLine.position();
-    }
-  }
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// color theme switcher
+const colorSwitchContainer             = document.getElementById('circle-container');
+const themes                           = ["default", "dark", "theme1", "theme2"]
+
+colorSwitchContainer.addEventListener('click', function (e) {
+  let i = colorSwitchContainer.dataset.clicks = (parseInt(colorSwitchContainer.dataset.clicks) === themes.length - 1 || isNaN(colorSwitchContainer.dataset.clicks)) ? 0 : parseInt(colorSwitchContainer.dataset.clicks) + 1;
+  document.documentElement.setAttribute('data-theme', themes[i]);
+  thisSessionContent.theme = themes[i];
+  saveToLocalStorage(thisSessionContent);
 });
-/* 2. Tell it which elements to watch
-Whenever you create a StartPoint or EndArea, pass it to the observer:
-resizeObserver.observe(StartPoint);
-resizeObserver.observe(EndArea);
-*/
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,11 +155,11 @@ function changeToInput() {
   const nCtxt                                    = document.querySelector('#nCtxt');
   nCtxt.setAttribute('onclick', '');
   const nCtxth1                                  = nCtxt.children[0]; 
-  if (nCtxt.children[0].tagName === 'H1') {
+  if (nCtxt.children[0].tagName === 'H2') {
     nCtxt.children[0].style.display   = 'none';
   }
   else {
-    throw new Error('No h1 found');
+    throw new Error('No h2 found');
   }
 
   const input                                    = document.querySelector('#inputforCatTitle');
@@ -184,7 +182,7 @@ function newCategoryOffer() {
     <section class="newCategoryOffer row">
       <div class="AddButton"></div>
       <div id="nCtxt" class="nC-txt width100" onclick="changeToInput()">
-        <h1 onclick="changeToInput()">new Category (click on me to name me und then Enter/Return)</h1>
+        <h2 id="nCOh2" onclick="changeToInput()">new Category (click on me to name me und then Enter/Return)</h2>
         <input type="text" id="inputforCatTitle" class="hidden"></div>
     </section>
   */
@@ -200,7 +198,7 @@ function newCategoryOffer() {
   nCtxt.id                                       = 'nCtxt';
   nCtxt.classList.add('nC-txt', 'width100');
   nCtxt.setAttribute('onclick', `changeToInput()`);
-  nCtxt.innerHTML                                = '<h1 onclick="changeToInput()">new Category (click on me, again to name me und then go to plus button)</h1>';
+  nCtxt.innerHTML                                = '<h2  id="nCOh2" onclick="changeToInput()">new Category (click on me, again to name me und then go to plus button)</h2>';
   newCategory.appendChild(nCtxt);
 
   const nCInput                                  = document.createElement('input');
@@ -222,7 +220,7 @@ function createCategory() {
 
   const nctxt                                            = document.getElementById('nCtxt');
   nCtxt.setAttribute('onclick', `changeToInput()`);
-  nCtxt.innerHTML                                        = '<h1 onclick="changeToInput()">new Category (click on me to name me und then Enter/Return)</h1><input type="text" id="inputforCatTitle" class="hidden"></div>';
+  nCtxt.innerHTML                                        = '<h2 id="nCOh2" onclick="changeToInput()">new Category (click on me to name me und then Enter/Return)</h2><input type="text" id="inputforCatTitle" class="hidden"></div>';
 
   const newCatContainer                                  = document.createElement('div');
   
@@ -644,7 +642,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
-  let ImageHolder                               = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
+  let ImageHolder                                = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
   //storing ImageHolder dimensions
   let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
   function HIDimensions(e1, e2) {
@@ -841,7 +839,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   //EndArea._leaderLine    = line;
 
   // entry to the ResizeObserver (for registering any movements for updating the start point of this LeaderLine)
-  resizeObserver.observe(StartPoint);
+  //resizeObserver.observe(StartPoint);
 
   // window size change
   window.addEventListener('resize', function () {
@@ -924,10 +922,8 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   h2Headline.addEventListener('click', () => {
     isCollapsed1 = !isCollapsed1;
     if (isCollapsed1) {
-      console.log('passedS1');
       line.hide();
     } else {
-      console.log('passedS1A');
       line.show();
     }
   });
@@ -982,14 +978,17 @@ function deleteLLine(element) {
 
 
 // update content without reloading page
-function updateDocument(tSCpage) {
+function updateDocument(tSC) {
 
   document.querySelectorAll("#siteTitle, #introTitle, #introText, #instructionsTitle")
   .forEach((element) => {
-    element.textContent                                         = tSCpage[element.id];
+    element.textContent                                         = tSC.page[element.id];
   });
 
-  document.getElementsByTagName("title")[0].innerHTML           = tSCpage.siteTitle;
+  document.getElementsByTagName("title")[0].innerHTML           = tSC.page.siteTitle;
+
+  document.documentElement.setAttribute('data-theme', tSC.theme);
+  colorSwitchContainer.dataset.clicks                     = themes.indexOf(tSC.theme);
 
 }
 
@@ -1005,7 +1004,7 @@ function updateContentToUI() {
     return;
   }
 
-  updateDocument(thisSessionContent.page);
+  updateDocument(thisSessionContent);
 
   thisSessionContent.instructions.forEach(e => {
     if (!e || !e.KatID) {
@@ -1021,6 +1020,9 @@ function updateContentToUI() {
       tempSection.addEventListener('click', function (e) {
         if ((e.target.tagName === 'H2')){
           this.querySelector('.containerC.bubbleContainer.row').classList.toggle('minimize');
+          allLinesData.forEach(lineObj => {
+            lineObj.line.position();
+          })
         }
       });
       tempSection.innerHTML                      = e.KatMover + e.KatSection + e.KatDelete;
@@ -1240,6 +1242,9 @@ const hlButtonintro          = document.getElementById("headline-intro");
 hlButtonintro.addEventListener('click', function (e) {
   document.querySelector('#intro-height').classList.toggle('minimize');
   this.classList.toggle('changedState');
+  allLinesData.forEach(lineObj => {
+    lineObj.line.position();
+  })
 });
 
 const hlButtonInstro         = document.getElementById("headline-instro");
@@ -1268,6 +1273,11 @@ hlButtonInstro.addEventListener('click', function (e) {
       })
     });
   }
+
+  allLinesData.forEach(lineObj => {
+    lineObj.line.position();
+  })
+
 });
 
 
@@ -1289,6 +1299,3 @@ document.addEventListener('DOMContentLoaded', () => {
   loadFromLocalStorage();
   updateContentToUI();
 });
-
-// What to test/check?
-// - h2 headline (including the instro h2) buttons do not let always show the LeaderLines, correction: it shows, but does not update position
