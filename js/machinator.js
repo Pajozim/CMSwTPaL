@@ -94,9 +94,6 @@ colorSwitchContainer.addEventListener('click', function (e) {
 });
 
 
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 function KatBoxinnerHTML(KatName) {
   return `
   <div class="MoveIconBox"></div>
@@ -588,6 +585,7 @@ function toggleIndicator(SPID, KatID) {
   }
   else {
     selectedObj.line.show();
+    selectedObj.line.position();
   }
 
   clearTimeout(Timer);
@@ -607,16 +605,16 @@ function toggleIndicator(SPID, KatID) {
 
 };
 
-function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI) {
+function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hIelement) {
 
-  //console.log('tbIdentifier:', tbIdentifier, 'invisibility:', invisibility, 'SPID:', SPID, 'EAID:', EAID, 'lColor:', lColor, 'EAValues:', EAValues, 'hI:', hI);
+  //console.log('tbHash:', tbHash, 'invisibility:', invisibility, 'SPID:', SPID, 'EAID:', EAID, 'lColor:', lColor, 'EAValues:', EAValues, 'hI:', hI);
 
   // colors
   const lineColors                               = ['orange', 'white', 'tomato', 'sandybrown', 'springgreen', 'yellow', 'fuchsia', 'sienna', 'crimson', 'deeppink'];
   let lineColor                                  = lColor || lineColors[0];
 
   // restrictors
-  const textbubble                               = document.querySelector(`[data-hash="${tbIdentifier}"]`);
+  const textbubble                               = document.querySelector(`[data-hash="${tbHash}"]`);
   const geoArea                                  = textbubble.querySelector(`.geometryArea`);
   const KatBox                                   = textbubble.closest('.KatBox');
   const BubblesCont                              = KatBox.querySelector('.containerC.bubbleContainer.row');
@@ -624,8 +622,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
-  let ImageHolder                                = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
-  console.log('ImageHolder:', ImageHolder);
+  let ImageHolder                                = hIelement || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
   //storing ImageHolder dimensions
   let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
   function HIDimensions(e1, e2) {
@@ -660,17 +657,28 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   EndArea.setAttribute('data-y', '0');
   ImageHolder.appendChild(EndArea);
   // storing EndArea dimensions
-  let EAwidth, EAheight;
+  let EAwidth, EAheight = 0;
   function EADimensions(e1, e2) {
     EAwidth  = e1 || EndArea.offsetWidth;
     EAheight = e2 || EndArea.offsetHeight;
-  };
-  EADimensions;
+  }
+  EADimensions();
+
+  // Line by LeaderLine
+  const line = new LeaderLine(
+    StartPoint,
+    EndArea,
+    {
+      size: 5,
+      color: lineColor,
+      endPlug: 'behind'
+    }
+  )
 
   // LeaderLine payload for tSC
-  function Payload(tbIdentifier, lineColor, hI) {
+  function Payload() {
     return {
-      hashID: tbIdentifier,
+      hashID: tbHash,
       invisible: false,
       EAValues: {
         EAwidth: EAwidth / ImageHolder.offsetWidth,
@@ -680,7 +688,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
         EAtransform: 'transform(0, 0)'
       },
       lineColor: lineColor,
-      hImage: hI
+      hImage: ImageHolder.getAttribute("data-hash")
     };
   }
 
@@ -707,22 +715,20 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   }
 
   // update EndArea into tSC
-  function EAtoTSC(hIhash) {
-    const KBObject                 = KatBox.id.split('-')[1];
-    const selectedKB               = thisSessionContent["instructions"].find(item => item.KatID === KBObject);
-    const KLpayload                = Payload(tbIdentifier, lineColor, hIhash);
-    if (!selectedKB.KatLines.find(item => item.hashID === tbIdentifier)) {
-      const linePayload            = KLpayload;
-      selectedKB.KatLines.push(linePayload);
+  function EAtoTSC() {
+    const KBHash                   = KatBox.id.split('-')[1];
+    const selectedKB               = thisSessionContent["instructions"].find(item => item.KatID === KBHash);
+    if (!selectedKB.KatLines.find(item => item.hashID === tbHash)) {
+      selectedKB.KatLines.push(Payload());
     } else {
-      const KLindex                = selectedKB.KatLines.findIndex(item => item.hashID === tbIdentifier);
-      selectedKB.KatLines[KLindex] = KLpayload;
+      const KLindex                = selectedKB.KatLines.findIndex(item => item.hashID === tbHash);
+      selectedKB.KatLines[KLindex] = Payload();
     }
-    console.log("tSC KatLines:", selectedKB.KatLines);
+    saveToLocalStorage();
   }
 
   // this function is used later in the resizing and gesture demos
-  window.dragMoveListener = dragMoveListener
+  window.dragMoveListener = dragMoveListener;
 
   // getting the relation of EndArea to the ImageHolder
   function EAtohIrelValues() {
@@ -746,7 +752,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
       let i = EndArea.dataset.clicks = (parseInt(EndArea.dataset.clicks) === lineColors.length - 1 || isNaN(EndArea.dataset.clicks)) ? 0 : parseInt(EndArea.dataset.clicks) + 1;
       lineColor                                              = lineColors[i];
       line.color = StartPoint.style.backgroundColor          = lineColor;
-      thisSessionContent.instructions.find(item => item.KatID === KatBox.id.split('-')[1]).KatLines.find(item => item.hashID === tbIdentifier).lineColor = lineColor;
+      thisSessionContent.instructions.find(item => item.KatID === KatBox.id.split('-')[1]).KatLines.find(item => item.hashID === tbHash).lineColor = lineColor;
       EndArea.style.border                                   = '5px solid ' + `${lineColor}`;
       event.preventDefault();
     }
@@ -779,8 +785,8 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
       },
 
       end (event) {
-        const hIhash         = EndArea.closest('.imgbubble').getAttribute('data-hash');
-        EAtoTSC(hIhash);
+        ImageHolder          = EndArea.closest('.imgbubble')
+        EAtoTSC();
       }
     },
     modifiers: [
@@ -816,8 +822,8 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
       // call this function on every dragend event
       end (event) {
-        // getting the actual imgage holder hash
-        const hIhash                   = EndArea.closest('.imgbubble').getAttribute('data-hash');
+        // getting the hovered Image element
+        const ImageHolder              = EndArea.closest('.imgbubble');
 
         // Cache layout values if necessary
         const EndAreaRect              = EndArea.getBoundingClientRect();
@@ -843,31 +849,15 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
         line.position();
 
-        EAtoTSC(hIhash);
-
-        saveToLocalStorage(thisSessionContent);
-
+        EAtoTSC();
       }
     }
   })
 
-  // Line by LeaderLine
-  const line = new LeaderLine(
-    StartPoint,
-    EndArea,
-    {
-      size: 5,
-      color: lineColor,
-      endPlug: 'behind'
-    }
-  )
 
   // Attach the line reference to the element
   StartPoint._leaderLine = line;
-  //EndArea._leaderLine    = line;
 
-  // entry to the ResizeObserver (for registering any movements for updating the start point of this LeaderLine)
-  //resizeObserver.observe(StartPoint);
 
   // window size change
   window.addEventListener('resize', function () {
@@ -899,11 +889,10 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
   // line.hide() and .show() min-and-maximizing headlines
   const h2Headline = KatBox.querySelector('.CatTitleArea');
-  let isCollapsed1 = false;
+  let isCollapsed  = false;
   h2Headline.addEventListener('click', () => {
-    console.log('clicked');
-    isCollapsed1 = !isCollapsed1;
-    if (isCollapsed1) {
+    isCollapsed = !isCollapsed;
+    if (isCollapsed) {
       line.hide();
     } else {
       line.show();
@@ -955,8 +944,6 @@ function updateDocument(tSC) {
 }
 
 function updateContentToUI() {
-
-  console.log("thisSC:", thisSessionContent);
 
   saveToLocalStorage(thisSessionContent);
   
@@ -1033,17 +1020,17 @@ function updateContentToUI() {
           const geometryArea                             = document.createElement('div');
           geometryArea.id                                = 'geometryArea-' + txt.hashID;
           const gAID                                     = geometryArea.id;
-          const tbIdentifier                             = txt.hashID;
-          const SPID                                     = 'SP-' + `${tbIdentifier}`;
-          const EAID                                     = 'EA-' + `${tbIdentifier}`;
+          const tbHash                                   = txt.hashID;
+          const SPID                                     = 'SP-' + `${tbHash}`;
+          const EAID                                     = 'EA-' + `${tbHash}`;
           geometryArea.classList.add('geometryArea');
           KContTxtBubble.appendChild(geometryArea); 
-          let lColor = hI    = null;
-          let invisibility   = false;
-          let EAValues       = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
+          let lColor = hIelement       = null;
+          let invisibility             = false;
+          let EAValues                 = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
           geometryArea.addEventListener('click', () => {
             const existingLine = allLinesData.find(line => line.SPID === SPID);
-            if (!existingLine) createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            if (!existingLine) createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hIelement);
             else toggleIndicator(SPID, KatBoxID.split('-')[1]);
           });
 
@@ -1074,7 +1061,7 @@ function updateContentToUI() {
             if (!txtbubbleID || !KatID) {
                 return console.error('Invalid txtbubble ID or KatID:', txtbubbleID, KatID);
             }
-            deleteElements(KatID, "KatContentTxt", tbIdentifier);
+            deleteElements(KatID, "KatContentTxt", tbHash);
           });
           KContTxtBubble.appendChild(KCTBdelete);
         }
@@ -1149,7 +1136,7 @@ function updateContentToUI() {
 
         if (!document.getElementById(`EA-${lineData.hashID}`)) {
 
-          const tbIdentifier   = lineData.hashID;
+          const tbHash   = lineData.hashID;
           const invisibility   = lineData.invisible;
           const SPID           = 'SP-' + `${lineData.hashID}`;
           const EAID           = 'EA-' + `${lineData.hashID}`;
@@ -1177,7 +1164,7 @@ function updateContentToUI() {
               EAtransform: EAtransform
             };
 
-            createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+            createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hIelement);
           });
         };
       });
