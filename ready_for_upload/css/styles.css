@@ -519,7 +519,7 @@
       }
 
       .Section {
-        border-radius: 0 0 var(--borderRad-Prio1) var(--borderRad-Prio1);
+        border-radius: var(--borderRad-Prio1);
         margin-left: 0;
         background-color: var(--recurringColor);
       }

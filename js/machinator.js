@@ -26,61 +26,6 @@ document.querySelectorAll("#siteTitle, #introTitle, #introText, #instructionsTit
     });
   });
 
-// Autosave progress
-// Save content whenever it changes
-function saveToLocalStorage(tSC) {
-  const data = tSC || thisSessionContent;
-  localStorage.setItem('instructionContent', JSON.stringify(data));
-}
-document.addEventListener('input', saveToLocalStorage);
-
-
-// Save project
-async function saveContent(payload) {
-  const dataToSave = payload || thisSessionContent;
-
-  const blob = new Blob([JSON.stringify(dataToSave)], { type: 'application/json' })
-  const a = document.createElement('a');
-  a.download = 'content.json';
-  a.href = URL.createObjectURL(blob);
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-const saveButton             = document.getElementById('save-button');
-saveButton.addEventListener("click", () => saveContent(thisSessionContent));
-
-
-// Load project
-const loadButton             = document.getElementById('load-button');
-const loadFrominput          = document.getElementById('loadFile');
-loadButton.addEventListener("click", () => loadFrominput.click());
-
-document.getElementById('loadFile').addEventListener('change', function(e) {
-  thisSessionContent = {};
-  localStorage.clear();
-  instroContainer.innerHTML        = '';
-  allLinesData                     = [];
-  document.querySelectorAll("svg").forEach(svg => svg.remove());
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(ev) {
-      const data = JSON.parse(ev.target.result);
-      thisSessionContent = data;
-      //document.querySelector('.newCategoryOffer').remove();
-      saveToLocalStorage(thisSessionContent);
-      updateContentToUI();
-    };
-    reader.readAsText(file);
-  }
-  this.value = ''; // Reset so same file can be loaded again
-});
-
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
 // Delete Elements (KatBox, txtbubble, imgbubble and LLines) Template
 function deleteElements(KBID, Obj = "", hash = "") {
 
@@ -131,19 +76,96 @@ function deleteElements(KBID, Obj = "", hash = "") {
 
 }
 
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// hash value generator
+function hashVgenerator() {
+  const hashValue                                = Math.random().toString(36).slice(10).padStart(3, '0');
+  return hashValue;
+} 
 
 
 // color theme switcher
 const colorSwitchContainer             = document.getElementById('circle-container');
 const themes                           = ["default", "dark", "theme1", "theme2"]
-
 colorSwitchContainer.addEventListener('click', function (e) {
   let i = colorSwitchContainer.dataset.clicks = (parseInt(colorSwitchContainer.dataset.clicks) === themes.length - 1 || isNaN(colorSwitchContainer.dataset.clicks)) ? 0 : parseInt(colorSwitchContainer.dataset.clicks) + 1;
   document.documentElement.setAttribute('data-theme', themes[i]);
   thisSessionContent.theme = themes[i];
   saveToLocalStorage(thisSessionContent);
+});
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function KatBoxinnerHTML(KatName) {
+  return `
+  <div class="MoveIconBox"></div>
+  <section class="Section column">
+    <div class="CatTitleArea">
+      <h2 class="KatBoxH2">${KatName}</h2>
+    </div>
+    <div class="containerC bubbleContainer row">
+      <div class="txtColumn column"></div>
+      <div class="imgColumn column"></div>
+    </div>
+  </section>
+  <div class="deleteCircleBox"></div>
+`
+} 
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// Autosave progress
+// Save content whenever it changes
+function saveToLocalStorage(tSC) {
+  const data = tSC || thisSessionContent;
+  localStorage.setItem('instructionContent', JSON.stringify(data));
+}
+document.addEventListener('input', saveToLocalStorage);
+
+
+// Save project
+async function saveContent(payload) {
+  const dataToSave = payload || thisSessionContent;
+
+  const blob = new Blob([JSON.stringify(dataToSave)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.download = 'content.json';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+const saveButton             = document.getElementById('save-button');
+saveButton.addEventListener("click", () => saveContent(thisSessionContent));
+
+
+// Load project
+const loadButton             = document.getElementById('load-button');
+const loadFrominput          = document.getElementById('loadFile');
+loadButton.addEventListener("click", () => loadFrominput.click());
+
+document.getElementById('loadFile').addEventListener('change', function(e) {
+  thisSessionContent = {};
+  localStorage.clear();
+  instroContainer.innerHTML        = '';
+  allLinesData                     = [];
+  document.querySelectorAll("svg").forEach(svg => svg.remove());
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const data = JSON.parse(ev.target.result);
+      thisSessionContent = data;
+      //document.querySelector('.newCategoryOffer').remove();
+      saveToLocalStorage(thisSessionContent);
+      updateContentToUI();
+    };
+    reader.readAsText(file);
+  }
+  this.value = ''; // Reset so same file can be loaded again
 });
 
 
@@ -222,46 +244,19 @@ function createCategory() {
   nCtxt.setAttribute('onclick', `changeToInput()`);
   nCtxt.innerHTML                                        = '<h2 id="nCOh2" onclick="changeToInput()">new Category (click on me to name me und then Enter/Return)</h2><input type="text" id="inputforCatTitle" class="hidden"></div>';
 
+  const hashV                                            = hashVgenerator();
+
   const newCatContainer                                  = document.createElement('div');
-  
+  newCatContainer.id                                     = "KatBox-" + hashV;
   newCatContainer.classList.add('CatContainer', 'row');
-  let catID = thisSessionContent.instructions.length;
-
-  newCatContainer.id                                     = catID;
-
-  const MoveIconBox                                      = document.createElement('div');
-  MoveIconBox.classList.add('MoveIconBox');
-  newCatContainer.appendChild(MoveIconBox);
-
-  const newCatSecContent                                 = document.createElement('section');
-  newCatSecContent.classList.add('Section', 'column');
-  newCatContainer.appendChild(newCatSecContent);
-  const CatTitle                                         = document.createElement('h2');
-  CatTitle.textContent                                   = savedCatName;
-  newCatSecContent.appendChild(CatTitle);
-  const newCatSeccontainerC                              = document.createElement('div');
-  newCatSeccontainerC.classList.add('containerC', 'bubbleContainer', 'row');
-  newCatSecContent.appendChild(newCatSeccontainerC);
-  const newCatSecContTxt                                 = document.createElement('div');
-  newCatSecContTxt.classList.add('txtColumn', 'column');
-  newCatSeccontainerC.appendChild(newCatSecContTxt);
-  const newCatSecContImg                                 = document.createElement('div');
-  newCatSecContImg.classList.add('imgColumn', 'column');
-  newCatSeccontainerC.appendChild(newCatSecContImg);
-
-  const deleteCircle                                     = document.createElement('div');
-  deleteCircle.classList.add('deleteCircleBox');
-  newCatContainer.appendChild(deleteCircle);
+  newCatContainer.innerHTML = KatBoxinnerHTML(savedCatName);
 
   const payload = {
     Katname: savedCatName,
-    KatID: hashVgenerator(),
-    KatMover: MoveIconBox.outerHTML,
-    KatSection: newCatSecContent.outerHTML,
+    KatID: hashV,
     KatContentTxt: [],
     KatContentImg: [],
-    KatLines: [],
-    KatDelete: deleteCircle.outerHTML,
+    KatLines: []
   };
 
   thisSessionContent["instructions"].push(payload);
@@ -283,10 +278,7 @@ new Sortable.create(instroContainer, {
     clearTimeout(sortTimeout);
 
     try {
-      // Set a delay of 3 seconds before sending the request
       sortTimeout = setTimeout(() => {
-
-        console.log("3 seconds passed");
 
         // update the LeaderLines
         const selectedSPs              = document.querySelectorAll('.StartPoint');
@@ -303,12 +295,10 @@ new Sortable.create(instroContainer, {
           };
         });
         thisSessionContent["instructions"] = updatedInstructions; // Overwrite the old array with re-ordered array
-        
-        //console.log("tSC after nOrder", thisSessionContent["instructions"]);
 
         saveToLocalStorage(thisSessionContent);
 
-      }, 3000); // 3000ms = 3 seconds
+      }, 1000);
 
       saveToLocalStorage(thisSessionContent);
 
@@ -335,11 +325,6 @@ document.body.addEventListener('click', (e) => {
 
 
 // new txt offer
-function hashVgenerator() {
-  const hashValue                                = Math.random().toString(36).slice(10).padStart(3, '0');
-  return hashValue;
-} 
-
 document.addEventListener('click', (event) => {
     if (event.target.closest('.SubmitContainer')) {
 
@@ -417,7 +402,6 @@ function ObserveTxtReorder(KatBoxID) {
     swapThreshold: 0.65,
     direction: 'vertical',
     onEnd: function (evt) {
-      // Send the new order to thisSessionContent after 3 seconds delay
       setTimeout(() => {
         // Get the new order of txtbubbles by their IDs
         const newtxtbubblesOrder       = Array.from(txtColumn.children)
@@ -434,7 +418,7 @@ function ObserveTxtReorder(KatBoxID) {
         selectedKB["KatContentTxt"]    = newtxtbubblesOrder;
         saveToLocalStorage(thisSessionContent);
         
-      }, 3000); // Delay of 3 seconds before initiating the restructure
+      }, 1000);
     }
   });
 }
@@ -507,7 +491,7 @@ function imageAddition(file, catID) {
       );
 
       // add too thisSessionContent
-      const imgPath = `assets/Content/images/${file.name}`
+      const imgPath = `ready_for_upload/assets/images/${file.name}`
       selectedKB.KatContentImg.push({
           hashID: hashVgenerator(),
           filename: file.name,
@@ -565,7 +549,7 @@ function ObserveImgReorder(KatBoxID) {
           selectedKB["KatContentImg"] = newimgbubblesOrder;
           saveToLocalStorage(thisSessionContent);
         
-      }, 3000); // Delay of 3 seconds before sending the order to the backend
+      }, 1000);
     }
   });
 }
@@ -608,8 +592,6 @@ function toggleIndicator(SPID, KatID) {
 
   clearTimeout(Timer);
   Timer = setTimeout(() => {
-    console.log('3 seconds have passed', SPID);
-
     const isHidden                 = targetedSPID.classList.contains('invisible');
     //console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
     
@@ -619,7 +601,7 @@ function toggleIndicator(SPID, KatID) {
     selectedLine.invisible         = isHidden;
 
     saveToLocalStorage(thisSessionContent);
-  }, 3000);
+  }, 1000);
 
   //invisibility        = isHidden;
 
@@ -643,6 +625,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
   let ImageHolder                                = imgColumn.querySelector(`[data-hash="${hI}"]`) || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
+  console.log('ImageHolder:', ImageHolder);
   //storing ImageHolder dimensions
   let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
   function HIDimensions(e1, e2) {
@@ -684,6 +667,23 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
   };
   EADimensions;
 
+  // LeaderLine payload for tSC
+  function Payload(tbIdentifier, lineColor, hI) {
+    return {
+      hashID: tbIdentifier,
+      invisible: false,
+      EAValues: {
+        EAwidth: EAwidth / ImageHolder.offsetWidth,
+        EAheight: EAheight / ImageHolder.offsetHeight,
+        EAtop: topPosPercent,
+        EAleft: leftPosPercent,
+        EAtransform: 'transform(0, 0)'
+      },
+      lineColor: lineColor,
+      hImage: hI
+    };
+  }
+
   // Function to check if two elements overlap
   function isOverlapping(element1, element2) {
   return !(
@@ -704,6 +704,21 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
     target.setAttribute('data-y', y);
 
     line.position();
+  }
+
+  // update EndArea into tSC
+  function EAtoTSC(hIhash) {
+    const KBObject                 = KatBox.id.split('-')[1];
+    const selectedKB               = thisSessionContent["instructions"].find(item => item.KatID === KBObject);
+    const KLpayload                = Payload(tbIdentifier, lineColor, hIhash);
+    if (!selectedKB.KatLines.find(item => item.hashID === tbIdentifier)) {
+      const linePayload            = KLpayload;
+      selectedKB.KatLines.push(linePayload);
+    } else {
+      const KLindex                = selectedKB.KatLines.findIndex(item => item.hashID === tbIdentifier);
+      selectedKB.KatLines[KLindex] = KLpayload;
+    }
+    console.log("tSC KatLines:", selectedKB.KatLines);
   }
 
   // this function is used later in the resizing and gesture demos
@@ -731,6 +746,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
       let i = EndArea.dataset.clicks = (parseInt(EndArea.dataset.clicks) === lineColors.length - 1 || isNaN(EndArea.dataset.clicks)) ? 0 : parseInt(EndArea.dataset.clicks) + 1;
       lineColor                                              = lineColors[i];
       line.color = StartPoint.style.backgroundColor          = lineColor;
+      thisSessionContent.instructions.find(item => item.KatID === KatBox.id.split('-')[1]).KatLines.find(item => item.hashID === tbIdentifier).lineColor = lineColor;
       EndArea.style.border                                   = '5px solid ' + `${lineColor}`;
       event.preventDefault();
     }
@@ -760,6 +776,11 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
         EADimensions(EndArea.offsetWidth, EndArea.offsetHeight);
         line.position();
+      },
+
+      end (event) {
+        const hIhash         = EndArea.closest('.imgbubble').getAttribute('data-hash');
+        EAtoTSC(hIhash);
       }
     },
     modifiers: [
@@ -795,10 +816,12 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
       // call this function on every dragend event
       end (event) {
+        // getting the actual imgage holder hash
+        const hIhash                   = EndArea.closest('.imgbubble').getAttribute('data-hash');
 
         // Cache layout values if necessary
-        const EndAreaRect                = EndArea.getBoundingClientRect();
-        const hvrdImageRect              = ImageHolder.getBoundingClientRect();
+        const EndAreaRect              = EndArea.getBoundingClientRect();
+        const hvrdImageRect            = ImageHolder.getBoundingClientRect();
         
         if (!isOverlapping(EndAreaRect, hvrdImageRect)) {
           // Iterate over images and check overlap without forcing multiple reflows
@@ -806,7 +829,7 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
 
             const imgRect                = img.getBoundingClientRect(); // Cache layout data for each image
             if (img && isOverlapping(EndAreaRect, imgRect)) {
-              ImageHolder               = img;
+              ImageHolder                            = img;
               img.insertAdjacentElement('afterbegin', EndArea);
               EndArea.style.top = EndArea.style.left = '0';
               EndArea.style.transform                = 'translate(0, 0)';
@@ -819,6 +842,11 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
         EAtohIrelValues()
 
         line.position();
+
+        EAtoTSC(hIhash);
+
+        saveToLocalStorage(thisSessionContent);
+
       }
     }
   })
@@ -864,62 +892,16 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
     line.position();
   });
 
-  // storing coordinates onto backend
-  // KatBox ID
-  const KatBoxID = KatBox.id;
-  function Payload(tbIdentifier, lineColor, hI) {
-    return {
-      hashID: tbIdentifier,
-      invisible: false,
-      EAValues: {
-        EAwidth: EAwidth / ImageHolder.offsetWidth,
-        EAheight: EAheight / ImageHolder.offsetHeight,
-        EAtop: topPosPercent,
-        EAleft: leftPosPercent,
-        EAtransform: 'transform(0, 0)'
-      },
-      lineColor: lineColor,
-      hImage: hI
-    };
-  }
-
-
-  EndArea.addEventListener('click', () => {
-    clearTimeout(Timer);
-    Timer                    = setTimeout(() => {
-      console.log('3 seconds have passed');
-
-      EAstyleV               = EndArea.getAttribute('style');
-      const linePayload      = Payload(tbIdentifier, lineColor, ImageHolder.dataset.hash);
-      //console.log('linePayload:', linePayload , '\nstringified:', JSON.stringify(linePayload), "KatboxID:", KatBoxID);
-
-      const targetedIndex    = KatBoxID.split('-')[1];
-      const selectedKBID     = thisSessionContent["instructions"].find(item => item.KatID === targetedIndex);
-      selectedKBID.KatLines.push(linePayload);
-
-      saveToLocalStorage(thisSessionContent);
-
-      //console.log("tSC:", thisSessionContent);
-    }, 3000);    
-
-  });
-
-  // updating StartPoint and Line when textest were shuffled
-  /*
-  alltxtbubbles.forEach(img => {
-    img.addEventListener('dragend', function () {line.position();});
-  });
-  */
-
   // updating position of EndArea and Line when images were shuffled
   allimagebubbles.forEach(img => {
-    img.addEventListener('dragend', function () {line.position();});
+    img.addEventListener('dragend', () => line.position());
   });
 
   // line.hide() and .show() min-and-maximizing headlines
-  const h2Headline = KatBox.querySelector('.Section.column h2');
+  const h2Headline = KatBox.querySelector('.CatTitleArea');
   let isCollapsed1 = false;
   h2Headline.addEventListener('click', () => {
+    console.log('clicked');
     isCollapsed1 = !isCollapsed1;
     if (isCollapsed1) {
       line.hide();
@@ -927,28 +909,8 @@ function createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValu
       line.show();
     }
   });
-  // global hlButtonIns is in another <script>
 
-  // ImageHolder if deleted
-  /*
-  const deleteBtn   = ImageHolder.querySelector('.imgDelete');
-  const imgbubbleID = ImageHolder.id.split('-')[1];
-  const imgHash     = ImageHolder.dataset.hash;
-  deleteBtn.addEventListener('click', () => {
-    allLinesData.filter(line => line.SPID === SPID);
-    console.log('allinesData post:', allLinesData);
-    deleteImage(KatBox.id, imgbubbleID, imgHash)
-  })
-  */
 
-  // bundle all SPID, LID, EAID
-  /*
-  if (!invisibility) {
-    setInterval(() => {
-      line.position(); 
-    }, 1500);
-  }
-  */
   const bundle                                   = { SPID, line, EAID };
   allLinesData.push(bundle);
 
@@ -1018,21 +980,15 @@ function updateContentToUI() {
       tempSection.id                       = 'KatBox-' + e.KatID;
       tempSection.classList.add('KatBox', 'row', 'list-group-item');
       tempSection.addEventListener('click', function (e) {
-        if ((e.target.tagName === 'H2')){
+        if (e.target.classList.contains('CatTitleArea') || (e.target.tagName === 'H2' && e.target.parentElement.classList.contains('CatTitleArea'))) {
           this.querySelector('.containerC.bubbleContainer.row').classList.toggle('minimize');
           allLinesData.forEach(lineObj => {
             lineObj.line.position();
-          })
+          });
         }
       });
-      tempSection.innerHTML                      = e.KatMover + e.KatSection + e.KatDelete;
-
-      const KatMover                             = tempSection.querySelector('.MoveIconBox');
-      if (!KatMover) {
-        console.error('MoveIconBox element not found');
-        return;
-      }
-      KatMover.classList.add('glyphicon', 'glyphicon-move');
+      tempSection.innerHTML                      = KatBoxinnerHTML(e.Katname);
+      
       instroCt.appendChild(tempSection);
     }
     else tempSection                             = document.getElementById(`KatBox-${e.KatID}`);
@@ -1191,39 +1147,41 @@ function updateContentToUI() {
     if (Array.isArray(e.KatLines)) {
       e.KatLines.forEach(lineData => {
 
-        const tbIdentifier   = lineData.hashID;
-        const invisibility   = lineData.invisible;
-        const SPID           = 'SP-' + `${lineData.hashID}`;
-        const EAID           = 'EA-' + `${lineData.hashID}`;
-        const lColor         = lineData.lineColor;
+        if (!document.getElementById(`EA-${lineData.hashID}`)) {
 
-        const hIelement      = document.querySelector(`[data-hash="${lineData.hImage}"]`);
+          const tbIdentifier   = lineData.hashID;
+          const invisibility   = lineData.invisible;
+          const SPID           = 'SP-' + `${lineData.hashID}`;
+          const EAID           = 'EA-' + `${lineData.hashID}`;
+          const lColor         = lineData.lineColor;
 
-        if (hIelement === null) console.warn(`No image found for line with hashID: ${lineData.hImage}`);
+          const hIelement      = document.querySelector(`[data-hash="${lineData.hImage}"]`);
+
+          if (hIelement === null) console.warn(`No image found for line with hashID: ${lineData.hImage}`);
+          
+          const img            = hIelement.querySelector('img');
         
-        const img            = hIelement.querySelector('img');
-      
-        img.addEventListener('load', () => {
-          const hIRect       = hIelement.getBoundingClientRect();
+          img.addEventListener('load', () => {
+            const hIRect       = hIelement.getBoundingClientRect();
 
-          const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
+            const { EAwidth, EAheight, EAleft, EAtop, EAtransform } = lineData.EAValues;
 
-          const scaleX       = hIRect.width;
-          const scaleY       = hIRect.height;
+            const scaleX       = hIRect.width;
+            const scaleY       = hIRect.height;
 
-          const EAValues     = {
-            EAleft: `${scaleX / EAleft}px`,
-            EAtop: `${scaleY / EAtop}px`,
-            EAwidth: `${scaleX * EAwidth}px`,
-            EAheight: `${scaleY * EAheight}px`,
-            EAtransform: EAtransform
-          };
+            const EAValues     = {
+              EAleft: `${scaleX / EAleft}px`,
+              EAtop: `${scaleY / EAtop}px`,
+              EAwidth: `${scaleX * EAwidth}px`,
+              EAheight: `${scaleY * EAheight}px`,
+              EAtransform: EAtransform
+            };
 
-          createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
-        });
+            createLeaderLine(tbIdentifier, invisibility, SPID, EAID, lColor, EAValues, hI);
+          });
+        };
       });
-    };
-
+    }
   });
 
   const newCatOffer                                  = document.querySelectorAll('.newCategoryOffer')[0] || newCategoryOffer();
@@ -1299,3 +1257,73 @@ document.addEventListener('DOMContentLoaded', () => {
   loadFromLocalStorage();
   updateContentToUI();
 });
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+// rendering to static HTML
+function generateStaticHTML(content) {
+  const DOMclone             = document.documentElement.cloneNode(true);
+  // removing contenteditable attributes
+  DOMclone.querySelectorAll('[contenteditable]').forEach(element => element.removeAttribute('contenteditable'));
+  // removing the editing tools
+  DOMclone.querySelectorAll('.MoveIconBox, .txtDelete, .imgDelete, .deleteCircleBox, .txtcontnew, .imgcontnew, .newCategoryOffer').forEach(element => element.remove());
+  // removing the save, export and load buttons including the input
+  DOMclone.querySelectorAll('#file-handling, #loadFile, #image-input-element').forEach(element => element.remove());
+  // removing the not needed links and scripts
+  DOMclone.querySelectorAll('link[href="css/quill.snow.css"], script[src="libs/Sortable.min.js"], script[src="libs/jszip.min.js"], script[src="libs/quill.js"], script[src="libs/interact.min.js"], script[src="js/machinator.js"]').forEach(element => element.remove());
+  // rebase the img src to the local img folder
+  DOMclone.querySelectorAll('img').forEach(element => {
+    const oldSrc             = element.getAttribute('src');
+    const newSrc             = oldSrc.replace('ready_for_upload/', '');
+    element.setAttribute('src', newSrc);
+  });
+  // add the minimal.js
+  const minimalScript        = document.createElement('script');
+  minimalScript.setAttribute('src', 'js/minimal.js');
+  const DOMbody              = DOMclone.querySelector('body');
+  DOMbody.insertAdjacentElement('beforeend', minimalScript);
+  // adding LeaderLines as global variable
+  const linesData = JSON.stringify(allLinesData);
+  const globVarScript = DOMclone.createElement('script');
+  globVarScript.textContent = `
+      window.allLinesData = ${linesData};
+      console.log('Lines data loaded:', window.allLinesData);
+  `;
+  DOMclone.body.insertAdjacentElement('beforeend', globVarScript);
+
+  const staticHTML = `<!DOCTYPE html>\n${DOMclone.outerHTML}`;
+  return staticHTML;
+};
+  
+
+// Export the project, finish it for publication
+let showAlert      = true;
+async function exportProject() {
+
+  if (showAlert) {
+    alert('For proper functionality, please download/replace index.html into the "ready_for_upload" folder. \n\n(This popup will be ignored for this session)');
+    showAlert      = false;
+  }
+
+  const html       = generateStaticHTML(thisSessionContent);
+  
+  const blob       = new Blob([html], { type: 'text/html; charset=utf-8' });
+  const a          = document.createElement('a');
+  a.download       = 'index.html';
+  a.href           = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+};
+
+
+const exportButton = document.getElementById('export-button');
+exportButton.addEventListener("click", () => exportProject());
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+// What to do
+// - headline 2 INSIDE Quill-Editor shall not be editable

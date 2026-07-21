@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title></title>
-    <link href="assets/favicon.svg" rel="icon" type="image/svg+xml">
-    <link href="css/RedHatDisplayFonts.css" rel="stylesheet">
+    <link href="assets/favicon.svg" rel="icon" type="image/svg+xml" />
+    <link href="css/RedHatDisplayFonts.css" rel="stylesheet" />
     <link href="css/quill.snow.css" rel="stylesheet" />
     <link href="css/styles.css" rel="stylesheet" />
 </head>
 <body>
 
   <div id="circle-container" data-clicks="0">
-    <div id="ThreeD-circle"></div>
+    <div id="ThreeD-circle"><p>1</p></div>
   </div>
   
   <section id="title">
@@ -44,8 +44,9 @@
   </section>
   <section id="file-handling" class="width100 column">
       <div id="save"><button id="save-button">Save</button></div>
-      <input type="file" id="loadFile" accept=".json" style="display:none">
+      <div id="export"><button id="export-button">Export</button></div>
       <div id="load"><button id="load-button">Load</button></div>
+      <input type="file" id="loadFile" accept=".json" style="display:none">
   </section>
   <section id="footer">
 
@@ -58,6 +59,7 @@
 
   
 <script src="libs/Sortable.min.js"></script>
+<script src="libs/jszip.min.js"></script>
 <script src="libs/quill.js"></script>
 <script src="libs/interact.min.js"></script>  
 <script src="libs/leader-line.min.js"></script>
