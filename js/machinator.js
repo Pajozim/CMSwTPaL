@@ -22,13 +22,12 @@ document.querySelectorAll("#siteTitle, #introTitle, #introText, #instructionsTit
     element.addEventListener("blur",  () => {
       thisSessionContent.page[element.id]                                                     = element.textContent;
       if (element.id === "site-title") document.getElementsByTagName("title")[0].innerHTML    = element.textContent;
-      saveToLocalStorage(thisSessionContent);
+      saveToLocalStorage();
     });
   });
 
 // Delete Elements (KatBox, txtbubble, imgbubble and LLines) Template
 function deleteElements(KBID, Obj = "", hash = "") {
-
   try {
     
     if (!Obj && !hash) {
@@ -36,7 +35,11 @@ function deleteElements(KBID, Obj = "", hash = "") {
       // delete the selected KatBox/element and its content
       const selectedKBx                          = document.getElementById("KatBox-" + KBID);
       selectedKBx.querySelectorAll('[id^="SP-"]').forEach((element) => { // deleting all txtbubble elements and its LeaderLines
-        deleteLLine(element);
+        const lineObj                            = allLinesData.find(lineObj => lineObj.tbHash === element.id.split('-')[1]);
+        if (lineObj) {
+          lineObj?.line.remove();
+          allLinesData.splice(allLinesData.indexOf(lineObj), 1);
+        }
         element.remove();
       });
       selectedKBx.querySelectorAll('[id^="EA-"]').forEach(element => element.remove()); // deleting all EndArea elements
@@ -47,28 +50,37 @@ function deleteElements(KBID, Obj = "", hash = "") {
       thisSessionContent.instructions.splice(selectedItemIndex, 1);
 
     } else {
-      
-      // removing DOM elements and LeaderLines
-      const selectedSP               = document.getElementById("SP-" + hash);
-      if (selectedSP) deleteLLine(selectedSP);
-      const EAelement                = document.getElementById("EA-" + hash);
-      if (EAelement) EAelement.remove();
+      // when image hash, then retrieve tbhash
+      if (Obj === "KatContentImg") {
+        const lineHashes = allLinesData.filter(item => item.IHDH === hash);
+        // removing DOM elements and LeaderLines
+        lineHashes.forEach(lineObject => {
+          lineObject.line.remove();
+          const selectedSP               = document.getElementById("SP-" + lineObject.tbHash)?.remove();
+          document.getElementById("EA-" + lineObject.tbHash)?.remove();
+        })
+      } else {
+        allLinesData.find(lineObj => lineObj.tbHash === hash).line.remove();
+        const selectedSP               = document.getElementById("SP-" + hash)?.remove();
+        document.getElementById("EA-" + hash)?.remove();
+      }
       document.querySelector(`[data-hash="${hash}"]`).remove(); // deleting the txt-/img-bubble and its children
 
       // updates thisSessionContent
       const selectedKatBox                                     = thisSessionContent.instructions.find(item => item.KatID === KBID);
-      const selectedIndex                                      = selectedKatBox[Obj].findIndex(item => item.hashID === hash);
-      selectedKatBox[Obj].splice(selectedIndex, 1);
-      selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hashID !== hash || item.hImage !== hash);
+      selectedKatBox[Obj]                                      = selectedKatBox[Obj].filter(item => item.hashID !== hash);
+      selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hImage !== hash && item.hashID !== hash);
+
+      // clean up the allLinesData
+      allLinesData                                             = allLinesData.filter(lineObj => lineObj.tbHash !== hash && lineObj.IHDH !== hash);
 
     }
 
-    // delete the line
-    //console.log("allLinesData:", allLinesData, "hash", hash);
-    allLinesData                               = allLinesData.filter(item => item.SPID !== "SP-" + hash);
+    // update all line positions of the rest
+    allLinesData.forEach(lineObj => lineObj.line.position());
 
     // saves the updated tSC
-    saveToLocalStorage(thisSessionContent);
+    saveToLocalStorage();
 
   } catch (error) {
     console.error('Error deleting element:', error);
@@ -90,7 +102,7 @@ colorSwitchContainer.addEventListener('click', function (e) {
   let i = colorSwitchContainer.dataset.clicks = (parseInt(colorSwitchContainer.dataset.clicks) === themes.length - 1 || isNaN(colorSwitchContainer.dataset.clicks)) ? 0 : parseInt(colorSwitchContainer.dataset.clicks) + 1;
   document.documentElement.setAttribute('data-theme', themes[i]);
   thisSessionContent.theme = themes[i];
-  saveToLocalStorage(thisSessionContent);
+  saveToLocalStorage();
 });
 
 
@@ -116,9 +128,8 @@ function KatBoxinnerHTML(KatName) {
 
 // Autosave progress
 // Save content whenever it changes
-function saveToLocalStorage(tSC) {
-  const data = tSC || thisSessionContent;
-  localStorage.setItem('instructionContent', JSON.stringify(data));
+function saveToLocalStorage() {
+  localStorage.setItem('instructionContent', JSON.stringify(thisSessionContent));
 }
 document.addEventListener('input', saveToLocalStorage);
 
@@ -157,7 +168,7 @@ document.getElementById('loadFile').addEventListener('change', function(e) {
       const data = JSON.parse(ev.target.result);
       thisSessionContent = data;
       //document.querySelector('.newCategoryOffer').remove();
-      saveToLocalStorage(thisSessionContent);
+      saveToLocalStorage();
       updateContentToUI();
     };
     reader.readAsText(file);
@@ -271,38 +282,30 @@ new Sortable.create(instroContainer, {
   draggable: ".KatBox",
   direction: 'vertical',
   onEnd: function (evt) {
-    // Clear any existing timeout to avoid multiple calls
-    clearTimeout(sortTimeout);
 
-    try {
-      sortTimeout = setTimeout(() => {
+    // update the LeaderLines
+    /*
+    const selectedSPs              = document.querySelectorAll('.StartPoint');
+    if (selectedSPs) selectedSPs.forEach(sp => {
+      allLinesData.find(lineObj => lineObj.SPID === sp.id).line.position();
+    });
+    */
+   allLinesData.forEach(lineObj => lineObj.line.position());
 
-        // update the LeaderLines
-        const selectedSPs              = document.querySelectorAll('.StartPoint');
-        if (selectedSPs) selectedSPs.forEach(sp => sp._leaderLine?.position());
+    // Get new order
+    const filteredArray            = Array.from(instroContainer.children).filter(div => div.classList.contains('KatBox'));
+    const updatedInstructions      = filteredArray.map((div, index) => {
 
-        // Get new order
-        const filteredArray            = Array.from(instroContainer.children).filter(div => div.classList.contains('KatBox'));
-        const updatedInstructions      = filteredArray.map((div, index) => {
+      const KBID                        = div.id.split('-')[1];
+      const selectedItem                = thisSessionContent["instructions"].find(item => item.KatID === KBID); // Grab the original instruction object, clone it, and update KatID
+      return {
+        ...selectedItem, // Shallow clone to prevent mutating mid-flight
+      };
+    });
+    thisSessionContent["instructions"] = updatedInstructions; // Overwrite the old array with re-ordered array
 
-          const KBID                        = div.id.split('-')[1];
-          const selectedItem                = thisSessionContent["instructions"].find(item => item.KatID === KBID); // Grab the original instruction object, clone it, and update KatID
-          return {
-            ...selectedItem, // Shallow clone to prevent mutating mid-flight
-          };
-        });
-        thisSessionContent["instructions"] = updatedInstructions; // Overwrite the old array with re-ordered array
-
-        saveToLocalStorage(thisSessionContent);
-
-      }, 1000);
-
-      saveToLocalStorage(thisSessionContent);
-
-    } catch (error) {
-      console.error(error);
-    }
-  },
+    saveToLocalStorage();
+  }
 });
 
 // delete category  
@@ -399,23 +402,23 @@ function ObserveTxtReorder(KatBoxID) {
     swapThreshold: 0.65,
     direction: 'vertical',
     onEnd: function (evt) {
-      setTimeout(() => {
         // Get the new order of txtbubbles by their IDs
         const newtxtbubblesOrder       = Array.from(txtColumn.children)
-          .filter((div) => div.classList.contains('txtbubble'))
-          .map(div => {
-            const selectedSP           = div.querySelector('.StartPoint');
-            if (selectedSP) selectedSP._leaderLine.position();
-            const tbHash               = div.id.split('-')[1];
-            const selectedtxtbbl       = selectedKB["KatContentTxt"].find(item => item.hashID === tbHash);
+        .filter((div) => div.classList.contains('txtbubble'))
+        .map(div => {
+          /*
+          const selectedSP           = div.querySelector('.StartPoint');
+          if (selectedSP) selectedSP._leaderLine.position();
+          */
+          allLinesData.forEach(lineObj => lineObj.line.position());
+          const tbHash               = div.id.split('-')[1];
+          const selectedtxtbbl       = selectedKB["KatContentTxt"].find(item => item.hashID === tbHash);
 
-            return {...selectedtxtbbl};
-          });
+          return {...selectedtxtbbl};
+        });
 
-        selectedKB["KatContentTxt"]    = newtxtbubblesOrder;
-        saveToLocalStorage(thisSessionContent);
-        
-      }, 1000);
+      selectedKB["KatContentTxt"]    = newtxtbubblesOrder;
+      saveToLocalStorage();
     }
   });
 }
@@ -495,7 +498,7 @@ function imageAddition(file, catID) {
           imgPath: imgPath,
       });
       
-      saveToLocalStorage(thisSessionContent);
+      saveToLocalStorage();
       updateContentToUI();
   };
   reader.readAsDataURL(file);
@@ -528,10 +531,13 @@ function ObserveImgReorder(KatBoxID) {
       setTimeout(() => {
 
         // update the LeaderLine positions
+        /*
         const selectedSPs              = selectedKatBox.querySelectorAll('.StartPoint');
         if (selectedSPs) selectedSPs.forEach(sSP => {
           sSP._leaderLine?.position(); // if (sSP._leaderLine) sSP._leaderLine.position();
         });
+        */
+        allLinesData.forEach(lineObj => lineObj.line.position());
 
         // Get the new order of txtbubbles by their IDs
         const newimgbubblesOrder       = Array.from(imgColumn.children)
@@ -544,7 +550,7 @@ function ObserveImgReorder(KatBoxID) {
 
           // Update the order in thisSessionContent
           selectedKB["KatContentImg"] = newimgbubblesOrder;
-          saveToLocalStorage(thisSessionContent);
+          saveToLocalStorage();
         
       }, 1000);
     }
@@ -571,13 +577,13 @@ function initializeQuillForNewEditors() {
 // indicators & LeaderLines
 let allLinesData = [], line = Timer = EAstyleV = null; //invisibility = false;
 
-function toggleIndicator(SPID, KatID) {
+function toggleIndicator(hash, KatID) {
 
-  const selectedObj = allLinesData.find(object => object.SPID === SPID);
+  const selectedObj = allLinesData.find(object => object.tbHash === hash);
 
-  const targetedSPID                               = document.querySelector(`#${SPID}`);
+  const targetedSPID                               = document.querySelector(`#SP-${hash}`);
   targetedSPID.classList.toggle('invisible');
-  const targetedEAID                               = document.querySelector(`#${selectedObj.EAID}`);
+  const targetedEAID                               = document.querySelector(`#EA-${hash}`);
   targetedEAID.classList.toggle('invisible');
 
   if (targetedSPID.classList.contains('invisible')) {
@@ -587,21 +593,14 @@ function toggleIndicator(SPID, KatID) {
     selectedObj.line.show();
     selectedObj.line.position();
   }
+  
+  // updating tSC
+  const isHidden                 = targetedSPID.classList.contains('invisible');
+  const selectedKB               = thisSessionContent.instructions.find(block => block.KatID === KatID);
+  const selectedLine             = selectedKB.KatLines.find(line => line.hashID === hash);
+  selectedLine.invisible         = isHidden;
 
-  clearTimeout(Timer);
-  Timer = setTimeout(() => {
-    const isHidden                 = targetedSPID.classList.contains('invisible');
-    //console.log('linePayload:', isHidden , 'stringified:', JSON.stringify(isHidden));
-    
-    const selectedKB               = thisSessionContent.instructions.find(block => block.KatID === KatID);
-    const tbHash                   = SPID.split('-')[1];
-    const selectedLine             = selectedKB.KatLines.find(line => line.hashID === tbHash);
-    selectedLine.invisible         = isHidden;
-
-    saveToLocalStorage(thisSessionContent);
-  }, 1000);
-
-  //invisibility        = isHidden;
+  saveToLocalStorage();
 
 };
 
@@ -753,6 +752,7 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
       lineColor                                              = lineColors[i];
       line.color = StartPoint.style.backgroundColor          = lineColor;
       thisSessionContent.instructions.find(item => item.KatID === KatBox.id.split('-')[1]).KatLines.find(item => item.hashID === tbHash).lineColor = lineColor;
+      saveToLocalStorage();
       EndArea.style.border                                   = '5px solid ' + `${lineColor}`;
       event.preventDefault();
     }
@@ -835,7 +835,11 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
 
             const imgRect                = img.getBoundingClientRect(); // Cache layout data for each image
             if (img && isOverlapping(EndAreaRect, imgRect)) {
+              // Update ImageHolder
               ImageHolder                            = img;
+              // update allLinesData
+              allLinesData.find(lineObj => lineObj.tbHash === EndArea.id.split('-')[1]).IHDH = ImageHolder.getAttribute('data-hash');
+              // Update EndArea
               img.insertAdjacentElement('afterbegin', EndArea);
               EndArea.style.top = EndArea.style.left = '0';
               EndArea.style.transform                = 'translate(0, 0)';
@@ -853,10 +857,6 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
       }
     }
   })
-
-
-  // Attach the line reference to the element
-  StartPoint._leaderLine = line;
 
 
   // window size change
@@ -899,30 +899,12 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
     }
   });
 
-
-  const bundle                                   = { SPID, line, EAID };
+  const IHDH                                     = ImageHolder.getAttribute('data-hash'); // IHDH = ImageHolder Data Hash
+  const bundle                                   = { tbHash, line, IHDH };
   allLinesData.push(bundle);
 
   return allLinesData;
-
 };
-
-function deleteLLine(element) {
-  // Guard clause: If the element wasn't found in the DOM, stop immediately
-  if (!element) {
-    console.warn("deleteLLine was called, but the element didn't exist.");
-    return; 
-  }
-
-  // 1. Safely remove the LeaderLine SVG if it exists
-  if (element._leaderLine) {
-    element._leaderLine.remove();
-    element._leaderLine = null; // Clear the memory reference
-  }
-
-  // 2. Safely remove the DOM element itself
-  //element.remove(); // since parent element will be deleted, children are also deleted
-}
 
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -945,7 +927,7 @@ function updateDocument(tSC) {
 
 function updateContentToUI() {
 
-  saveToLocalStorage(thisSessionContent);
+  saveToLocalStorage();
   
   const instroCt                                       = document.querySelector('#instructions-container'); // instroCt = instructions content
   if (!instroCt) {
@@ -1029,9 +1011,9 @@ function updateContentToUI() {
           let invisibility             = false;
           let EAValues                 = { EAwidth: '25%', EAheight: '25%', EAtop: '0', EAleft: '0', EAtransform: 'matrix(1, 0, 0, 1, 0, 0)' };
           geometryArea.addEventListener('click', () => {
-            const existingLine = allLinesData.find(line => line.SPID === SPID);
+            const existingLine = allLinesData.find(line => line.tbHash === tbHash);
             if (!existingLine) createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hIelement);
-            else toggleIndicator(SPID, KatBoxID.split('-')[1]);
+            else toggleIndicator(tbHash, KatBoxID.split('-')[1]);
           });
 
           const KCTBdelete                               = document.createElement('div');
@@ -1193,30 +1175,31 @@ hlButtonintro.addEventListener('click', function (e) {
 });
 
 const hlButtonInstro         = document.getElementById("headline-instro");
-let isCollapsed2             = false;
 
 hlButtonInstro.addEventListener('click', function (e) {
-  document.querySelector('#instructions-container').classList.toggle('minimize'); 
   this.classList.toggle('changedState'); 
   this.classList.toggle('width100');
 
-  isCollapsed2 = !isCollapsed2;
+  const instroContainer      = document.querySelector('#instructions-container');
+  instroContainer.classList.toggle('minimize');
+  let isCollapsed = instroContainer.classList.contains('minimize');
 
-  if (isCollapsed2) {
+  if (isCollapsed) {
     allLinesData.forEach(Obj => {
       Obj.line.hide();
     })
   }
   else {
-    const allBCboxes             = document.querySelectorAll('.containerC.bubbleContainer');
-    allBCboxes.forEach(BCbox => {
-      allLinesData.forEach(Obj => {
-        const DOMelement  = document.getElementById(Obj.SPID);
-        if (!DOMelement.closest('.minimize')) {
-          Obj.line.show();
-        }
-      })
+    const allBubblesContainer          = document.querySelectorAll('.containerC.bubbleContainer:not(.minimize)');
+    allBubblesContainer.forEach(container => {
+      const allbubbles           = container.querySelectorAll('[id^="txtbubble-"]');
+      allbubbles.forEach(bubble => {
+        const tbHash               = bubble.id.split('-')[1];
+        const targetedLineObj      = allLinesData.find(lineObj => lineObj.tbHash === tbHash);
+        const SPelement            = document.getElementById("SP-" + tbHash);
+        if (SPelement && !SPelement.classList.contains('invisible')) targetedLineObj.line.show();
     });
+    })
   }
 
   allLinesData.forEach(lineObj => {
@@ -1236,7 +1219,7 @@ function loadFromLocalStorage() {
   if (saved) {
     const parsedData         = JSON.parse(saved);
     thisSessionContent       = parsedData;
-    saveToLocalStorage(thisSessionContent);
+    saveToLocalStorage();
   }
 }
 
@@ -1313,4 +1296,6 @@ exportButton.addEventListener("click", () => exportProject());
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // What to do
-// - headline 2 INSIDE Quill-Editor shall not be editable
+// - observe txt reorder: on move line.position()?
+// - txtbubbles: contenteditable AND: update tSC
+// - check whether everything is fine when Katboxes, txtbubbles and imgbubbles are sorted anew
