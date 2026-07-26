@@ -69,10 +69,13 @@ function deleteElements(KBID, Obj = "", hash = "") {
       // updates thisSessionContent
       const selectedKatBox                                     = thisSessionContent.instructions.find(item => item.KatID === KBID);
       selectedKatBox[Obj]                                      = selectedKatBox[Obj].filter(item => item.hashID !== hash);
+      console.log("sKB",selectedKatBox);
       selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hImage !== hash && item.hashID !== hash);
+      console.log("sKB.Lines",selectedKatBox.KatLines);
 
       // clean up the allLinesData
       allLinesData                                             = allLinesData.filter(lineObj => lineObj.tbHash !== hash && lineObj.IHDH !== hash);
+      console.log("aLD", allLinesData);
 
     }
 
@@ -527,9 +530,6 @@ function ObserveImgReorder(KatBoxID) {
     swapThreshold: 0.65,
     direction: 'vertical',
     onEnd: function (evt) {
-      // Send the new order to the backend after 3 seconds delay
-      setTimeout(() => {
-
         // update the LeaderLine positions
         /*
         const selectedSPs              = selectedKatBox.querySelectorAll('.StartPoint');
@@ -551,8 +551,6 @@ function ObserveImgReorder(KatBoxID) {
           // Update the order in thisSessionContent
           selectedKB["KatContentImg"] = newimgbubblesOrder;
           saveToLocalStorage();
-        
-      }, 1000);
     }
   });
 }
@@ -621,12 +619,12 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
   const allimagebubbles                          = imgColumn.querySelectorAll('.imgbubble');
   if (!allimagebubbles.length) return;
-  let ImageHolder                                = hIelement || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0] || null;
+  let ImageHolder                                = hIelement || imgColumn.querySelectorAll('[id^="imgbubble-"]')[0];
   //storing ImageHolder dimensions
   let hIwidth, hIheight, leftPosPercent, topPosPercent = 0;
-  function HIDimensions(e1, e2) {
-    hIwidth  = e1 || ImageHolder.offsetWidth || 0;
-    hIheight = e2 || ImageHolder.offsetHeight || 0;
+  function HIDimensions() {
+    hIwidth  = ImageHolder.offsetWidth;
+    hIheight = ImageHolder.offsetHeight;
   }
 
   HIDimensions();
@@ -657,9 +655,9 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   ImageHolder.appendChild(EndArea);
   // storing EndArea dimensions
   let EAwidth, EAheight = 0;
-  function EADimensions(e1, e2) {
-    EAwidth  = e1 || EndArea.offsetWidth;
-    EAheight = e2 || EndArea.offsetHeight;
+  function EADimensions() {
+    EAwidth  = EndArea.offsetWidth;
+    EAheight = EndArea.offsetHeight;
   }
   EADimensions();
 
@@ -673,7 +671,7 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
       endPlug: 'behind'
     }
   )
-
+  
   // LeaderLine payload for tSC
   function Payload() {
     return {
@@ -702,15 +700,17 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   }
 
   function dragMoveListener (event) {
-    var target = event.target;
-    var x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
-    var y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+    let target = event.target;
+    let x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+    let y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
 
     target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-    target.setAttribute('data-x', x);
-    target.setAttribute('data-y', y);
 
     line.position();
+
+    target.setAttribute('data-x', x);
+    target.setAttribute('data-y', y);
   }
 
   // update EndArea into tSC
@@ -727,7 +727,7 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   }
 
   // this function is used later in the resizing and gesture demos
-  window.dragMoveListener = dragMoveListener;
+  /*window.dragMoveListener = dragMoveListener;*/
 
   // getting the relation of EndArea to the ImageHolder
   function EAtohIrelValues() {
@@ -737,9 +737,9 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
     deltay                 = EARect.top - hoverImageRect.top;
     hIwidth                = hoverImageRect.width;
     hIheight               = hoverImageRect.height;
-    leftPosPercent         = (hIwidth / deltax);
-    topPosPercent          = (hIheight / deltay);
-    EADimensions(EndArea.width, EndArea.height);          
+    leftPosPercent         = hIwidth / deltax;
+    topPosPercent          = hIheight / deltay;
+    EADimensions();
   }
 
   EAtohIrelValues();
@@ -776,12 +776,13 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
         y += event.deltaRect.top
 
         target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
+        
+        line.position();
 
         target.setAttribute('data-x', x)
         target.setAttribute('data-y', y)
 
-        EADimensions(EndArea.offsetWidth, EndArea.offsetHeight);
-        line.position();
+        EADimensions();
       },
 
       end (event) {
@@ -823,7 +824,7 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
       // call this function on every dragend event
       end (event) {
         // getting the hovered Image element
-        const ImageHolder              = EndArea.closest('.imgbubble');
+        ImageHolder                    = EndArea.closest('.imgbubble');
 
         // Cache layout values if necessary
         const EndAreaRect              = EndArea.getBoundingClientRect();
@@ -858,7 +859,6 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
     }
   })
 
-
   // window size change
   window.addEventListener('resize', function () {
     // Update the dimensions of ImageHolder
@@ -867,25 +867,28 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
     const hIchangeINheight     = hIRect.height / hIheight;
 
     // Update size and position of EndArea
-    /*EndArea.style.transform    = `translate(0px, 0px)`;
+    EndArea.style.transform    = `translate(0px, 0px)`;
     EndArea.setAttribute('data-x', '0');
-    EndArea.setAttribute('data-y', '0'); */
-    //console.log('Positions in Percentage', topPosPercent, leftPosPercent);
+    EndArea.setAttribute('data-y', '0');
+
     EndArea.style.width        = EAwidth * hIchangeINwidth + 'px';
     EndArea.style.height       = EAheight * hIchangeINheight + 'px';
     EndArea.style.top          = hIRect.height / topPosPercent + 'px';
     EndArea.style.left         = hIRect.width / leftPosPercent + 'px';
 
-    HIDimensions(hIRect.offsetWidth, hIRect.offsetHeight);
-    EADimensions(EndArea.offsetWidth, EndArea.offsetHeight);
+    EAtohIrelValues();
+    HIDimensions();
 
+    EAtoTSC();
     line.position();
   });
 
   // updating position of EndArea and Line when images were shuffled
+  /*
   allimagebubbles.forEach(img => {
-    img.addEventListener('dragend', () => line.position());
+    img.addEventListener('dragend', () => allLinesData.forEach(lineObj => lineObj.line.position()));
   });
+  */
 
   // line.hide() and .show() min-and-maximizing headlines
   const h2Headline = KatBox.querySelector('.CatTitleArea');
@@ -997,7 +1000,13 @@ function updateContentToUI() {
           KCTBtxtholder.classList.add('KCTBth', 'column');
           KCTBtxtholder.innerHTML                        = txt.tbContent;
           reorderTab.insertAdjacentElement('afterend', KCTBtxtholder);
-          
+          // make textContent editable for correcting typos or similar
+          const KCTBtxtholderP                           = KCTBtxtholder.querySelector('p');
+          KCTBtxtholderP.setAttribute('contenteditable', 'true');
+          KCTBtxtholderP.addEventListener('blur', () => {
+            txt.tbContent                                = "<p>" + KCTBtxtholderP.textContent + "</p>";
+            saveToLocalStorage();
+          });
 
           const geometryArea                             = document.createElement('div');
           geometryArea.id                                = 'geometryArea-' + txt.hashID;
@@ -1118,7 +1127,7 @@ function updateContentToUI() {
 
         if (!document.getElementById(`EA-${lineData.hashID}`)) {
 
-          const tbHash   = lineData.hashID;
+          const tbHash         = lineData.hashID;
           const invisibility   = lineData.invisible;
           const SPID           = 'SP-' + `${lineData.hashID}`;
           const EAID           = 'EA-' + `${lineData.hashID}`;
@@ -1197,7 +1206,9 @@ hlButtonInstro.addEventListener('click', function (e) {
         const tbHash               = bubble.id.split('-')[1];
         const targetedLineObj      = allLinesData.find(lineObj => lineObj.tbHash === tbHash);
         const SPelement            = document.getElementById("SP-" + tbHash);
-        if (SPelement && !SPelement.classList.contains('invisible')) targetedLineObj.line.show();
+        if (SPelement && !SPelement.classList.contains('invisible')) {
+          targetedLineObj.line.show();
+        }
     });
     })
   }
@@ -1296,6 +1307,4 @@ exportButton.addEventListener("click", () => exportProject());
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // What to do
-// - observe txt reorder: on move line.position()?
-// - txtbubbles: contenteditable AND: update tSC
-// - check whether everything is fine when Katboxes, txtbubbles and imgbubbles are sorted anew
+// - something offsets the svg top and left position, but from where?
