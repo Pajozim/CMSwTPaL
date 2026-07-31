@@ -1,10 +1,4 @@
 # Ignore folder and its contents
-assets/content/
-assets/images/
+ready_for_upload/assets/images/*
 assets/Content/
 js/repertoire.js
-
-# ignore image files
-*.jpg
-*.png
-ready_for_upload/assets/images/*
