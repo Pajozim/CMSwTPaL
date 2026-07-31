@@ -56,6 +56,7 @@
 
 3. Open `admin.html` in your browser — no server required. (Ignore `index.html` — it's only for the GitHub Pages demo.)
 4. Build your content visually: edit text, upload images, arrange elements, and draw connections by clicking on the green stripes inside textbubbles.
+   > ⚠️ **Image path requirement:** Place your images to `ready-for-upload/assets/images/` — the CMS references this folder for all image paths to keep exports clean and CORS-free.
 5. **Auto-save:** Your progress is automatically saved to `localStorage` — close the tab anytime, and pick up where you left off. You can also manually save and load your progress.
 6. Click **Export** — this downloads an `index.html` file for public use.
    > ⚠️ **Important:** Save this file **inside your `ready-for-upload/` folder**, replacing the existing one. The folder already contains the required structure — keeping `index.html` there ensures all paths work correctly.

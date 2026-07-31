@@ -357,26 +357,6 @@ p {
   text-align: justify;
 }
 
-/* file handling section */
-
-#file-handling {
-  align-self: flex-end;
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  justify-content: center;
-}
-
-#file-handling button {
-  cursor: pointer;
-  background-color: var(--recurringColor);
-  color: var(--font-color2);
-  font-weight: 600;
-  border-radius: var(--borderRad-Prio1);
-  width: 100%;
-  padding: 2% 5%;
-}
-
 /* instruction boxes and containers */
 
 #instructions {
@@ -401,51 +381,6 @@ p {
   height: auto;
 }
 
-.newCategoryOffer {
-  width: 100%;
-  justify-content: space-around;
-  border: 5px dashed var(--colorImgColumn);
-  border-radius: var(--borderRad-Prio2);
-  background-color: var(--recurringColor);
-}
-
-.AddButton1, .AddButton2 {
-  width: 5vw;
-  height: 5vh;
-  background-image: url(../assets/AddButton.svg);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  transform: scale(.7);
-  transition: all 0.3s ease;
-}
-
-.AddButton2 {
-  cursor: pointer;
-}
-
-.AddButton2:hover {
-  cursor: pointer;
-  background-image: url(../assets/AddButtonH.svg);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-}
-
-.nC-txt {
-  cursor: text;
-  padding: 1%;
-}
-
-#inputforCatTitle {
-  width: 100%;
-  min-height: 3vh;
-}
-
-#inputforCatTitle.hidden {
-  display: none;
-}
-
 .CatContainer {
   width: 100%;
 }
@@ -457,52 +392,6 @@ p {
 [id^="KatBox-"] {
   align-items: flex-start;
   padding: 0 !important;   
-}
-
-.MoveIconBox {
-  padding-right: .1% !important;
-  background-image: url(../assets/vertMove.svg);
-  border-radius: var(--borderRad-Prio2) 0 0 var(--borderRad-Prio2);
-}
-
-.MoveIconBox:hover {
-  cursor: move;
-  cursor: -webkit-grabbing;
-  background-image: url(../assets/vertMoveFill.svg);
-}
-
-.MoveIconBox, .deleteCircleBox {
-  width: auto;
-  height: 5vh;
-  aspect-ratio: 1/1;
-  padding: .5%;
-  background-color: var(--bg-color);
-  background-position: center;
-  background-origin: content-box;
-  background-repeat: no-repeat;
-  background-size: contain;
-  transition: background-image 0.3s ease, visibility 0.3s ease;
-}
-
-.MoveIconBox.txtreorder {
-  width: auto;
-  transform: scaleX(.5);
-  border-radius: 0;
-  padding: 1% !important;
-}
-
-.MoveIconBox.imgreorder {
-  opacity: 0;
-  width: 5%;
-  height: auto;
-  position: absolute;
-  border-radius: var(--borderRad-Prio1) 0 var(--borderRad-Prio1) 0;
-  padding: 1% !important;
-  transition: opacity 0.3s ease;
-}
-
-.MoveIconBox.imgreorder:hover {
-  opacity: 1;
 }
 
 .CatTitleArea {
@@ -524,18 +413,6 @@ p {
   background-color: var(--recurringColor);
 }
 
-.deleteCircleBox {
-  cursor: pointer;
-  padding-left: .25% !important;
-  border-radius: 0 var(--borderRad-Prio2) var(--borderRad-Prio2) 0;
-  background-image: url(../assets/deleteCircle.svg);
-}
-
-.deleteCircleBox:hover {
-  background-image: url(../assets/Basura.svg);
-}
-
-
 /* txt & img contents */
 
 .bubbleContainer {
@@ -548,7 +425,7 @@ p {
   max-width: 50%;
 }
 
-.txt  , .imgColumn {
+.txt, .imgColumn {
   padding: 1%;
 }
 
@@ -602,26 +479,6 @@ p {
   border: 5px dashed var(--colorTxtColumn)
 }
 
-.SubmitContainer {
-  width: 100%;
-  justify-content: flex-end;
-  border-top: 1px dashed var(--font-color);
-  padding-bottom: 0;
-}
-
-.SubmitContainer p {
-  color: var(--colorTxtColumn);
-  border: 1px solid var(--colorTxtColumn);
-  border-radius: var(--borderRad-Prio2);
-  padding: 1% 2%;
-  margin: 0;
-}
-
-.SubmitContainer:hover P {
-  cursor: pointer;
-  background-color: var(--colorTxtSubmit);
-}
-
 .imgColumn {
   position: relative;
   background-color: var(--colorImgColumn);
@@ -645,31 +502,6 @@ p {
 
 .imgbubble img, .imgbubble {
   border-radius: var(--borderRad-Prio1);
-}
-
-.txtDelete {
-  margin-top: .5%;
-}
-
-.imgDelete, .txtDelete {
-  opacity: 1;
-  cursor: pointer;
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 5%;
-  aspect-ratio: 1 / 1;
-  background-image: url(../assets/deleteCircle.svg);
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  padding: 0;
-  transition: background-image 0.3s ease, opacity 0.3s ease;
-}
-
-.imgDelete:hover, .txtDelete:hover {
-  opacity: 1;
-  background-image: url(../assets/Basura.svg);
 }
 
 #file-input-element {
@@ -712,53 +544,6 @@ p {
 #instruction-input {
     padding: 5%;
   }
-
-#editor-container {
-  overflow-y: visible;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  overflow-x: hidden;
-  resize: vertical;
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: column;
-}
-
-.ql-toolbar.ql-snow, .ql-container.ql-snow {
-  display: flex;
-  justify-content: center;
-  border: none;
-}
-
-[id^="quill-editor-"] {
-  justify-content: flex-start;
-  min-height: 15vh;
-  width: 100%;
-  height: 100%;
-}
-
-.ql-container {
-  height:auto;
-}
-
-.ql-toolbar.ql-snow {
-  border-bottom: var(--font-color) 1px dashed;
-  width: 100%;
-}
-
-.ql-snow .ql-formats {
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.ql-container.ql-snow {
-  border-radius: 0 0 var(--borderRad-Prio2);
-}
-
-.ql-snow .ql-hidden {
-  display: none !important;
-}
-
 
 /* footer */
 

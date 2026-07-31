@@ -3,3 +3,8 @@ assets/content/
 assets/images/
 assets/Content/
 js/repertoire.js
+
+# ignore image files
+*.jpg
+*.png
+ready_for_upload/assets/images/*

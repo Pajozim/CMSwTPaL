@@ -108,17 +108,17 @@ colorSwitchContainer.addEventListener('click', function (e) {
 
 function KatBoxinnerHTML(KatName) {
   return `
-  <div class="MoveIconBox"></div>
   <section class="Section column">
     <div class="CatTitleArea">
+      <div class="MoveIconBox"></div>
       <h2 class="KatBoxH2">${KatName}</h2>
+      <div class="deleteCircleBox"></div>
     </div>
     <div class="containerC bubbleContainer row">
       <div class="txtColumn column"></div>
       <div class="imgColumn column"></div>
     </div>
   </section>
-  <div class="deleteCircleBox"></div>
 `
 } 
 
@@ -1294,8 +1294,8 @@ let showAlert      = true;
 async function exportProject() {
 
   if (showAlert) {
-    alert('For proper functionality, please download/replace this file as/with index.html in the "ready_for_upload" folder. \n\n(This popup will be ignored for this session)');
-    //showAlert      = false;
+    alert('For proper functionality, please replace this file with index.html in the "ready_for_upload" folder. \n\n(This popup will be ignored for this session)');
+    showAlert      = false;
   }
 
   const html       = generateStaticHTML(thisSessionContent);

@@ -476,7 +476,6 @@ p {
   height: 5vh;
   aspect-ratio: 1/1;
   padding: .5%;
-  background-color: var(--bg-color);
   background-position: center;
   background-origin: content-box;
   background-repeat: no-repeat;
@@ -519,7 +518,7 @@ p {
 }
 
 .Section {
-  border-radius: 0 0 var(--borderRad-Prio1) var(--borderRad-Prio1);
+  border-radius: var(--borderRad-Prio1);
   margin-left: 0;
   background-color: var(--recurringColor);
 }

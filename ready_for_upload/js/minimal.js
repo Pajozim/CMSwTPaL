@@ -175,6 +175,5 @@ hlButtonInstro.addEventListener('click', function (e) {
 
 /*
 What to do:
-- EA positions
 - localStorage
  */
