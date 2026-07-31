@@ -37,8 +37,8 @@ function deleteElements(KBID, Obj = "", hash = "") {
       selectedKBx.querySelectorAll('[id^="SP-"]').forEach((element) => { // deleting all txtbubble elements and its LeaderLines
         const lineObj                            = allLinesData.find(lineObj => lineObj.tbHash === element.id.split('-')[1]);
         if (lineObj) {
-          lineObj?.line.remove();
-          allLinesData.splice(allLinesData.indexOf(lineObj), 1);
+          lineObj.line.remove();
+          allLinesData                           = allLinesData.filter(lineObj => lineObj.tbHash !== element.id.split('-')[1]);
         }
         element.remove();
       });
@@ -60,7 +60,7 @@ function deleteElements(KBID, Obj = "", hash = "") {
           document.getElementById("EA-" + lineObject.tbHash)?.remove();
         })
       } else {
-        allLinesData.find(lineObj => lineObj.tbHash === hash).line.remove();
+        allLinesData.find(lineObj => lineObj.tbHash === hash)?.line.remove();
         const selectedSP               = document.getElementById("SP-" + hash)?.remove();
         document.getElementById("EA-" + hash)?.remove();
       }
@@ -69,13 +69,10 @@ function deleteElements(KBID, Obj = "", hash = "") {
       // updates thisSessionContent
       const selectedKatBox                                     = thisSessionContent.instructions.find(item => item.KatID === KBID);
       selectedKatBox[Obj]                                      = selectedKatBox[Obj].filter(item => item.hashID !== hash);
-      console.log("sKB",selectedKatBox);
       selectedKatBox.KatLines                                  = selectedKatBox.KatLines.filter(item => item.hImage !== hash && item.hashID !== hash);
-      console.log("sKB.Lines",selectedKatBox.KatLines);
 
       // clean up the allLinesData
       allLinesData                                             = allLinesData.filter(lineObj => lineObj.tbHash !== hash && lineObj.IHDH !== hash);
-      console.log("aLD", allLinesData);
 
     }
 
@@ -604,8 +601,6 @@ function toggleIndicator(hash, KatID) {
 
 function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hIelement) {
 
-  //console.log('tbHash:', tbHash, 'invisibility:', invisibility, 'SPID:', SPID, 'EAID:', EAID, 'lColor:', lColor, 'EAValues:', EAValues, 'hI:', hI);
-
   // colors
   const lineColors                               = ['orange', 'white', 'tomato', 'sandybrown', 'springgreen', 'yellow', 'fuchsia', 'sienna', 'crimson', 'deeppink'];
   let lineColor                                  = lColor || lineColors[0];
@@ -614,6 +609,7 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   const textbubble                               = document.querySelector(`[data-hash="${tbHash}"]`);
   const geoArea                                  = textbubble.querySelector(`.geometryArea`);
   const KatBox                                   = textbubble.closest('.KatBox');
+  const KBHash                                   = KatBox.id.split('-')[1];
   const BubblesCont                              = KatBox.querySelector('.containerC.bubbleContainer.row');
   const alltxtbubbles                            = BubblesCont.querySelectorAll('.txtbubble');
   const imgColumn                                = KatBox.querySelector('.imgColumn.column');
@@ -715,7 +711,6 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
 
   // update EndArea into tSC
   function EAtoTSC() {
-    const KBHash                   = KatBox.id.split('-')[1];
     const selectedKB               = thisSessionContent["instructions"].find(item => item.KatID === KBHash);
     if (!selectedKB.KatLines.find(item => item.hashID === tbHash)) {
       selectedKB.KatLines.push(Payload());
@@ -726,15 +721,12 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
     saveToLocalStorage();
   }
 
-  // this function is used later in the resizing and gesture demos
-  /*window.dragMoveListener = dragMoveListener;*/
-
   // getting the relation of EndArea to the ImageHolder
   function EAtohIrelValues() {
     const EARect           = EndArea.getBoundingClientRect();
     const hoverImageRect   = ImageHolder.getBoundingClientRect();
-    deltax                 = EARect.left - hoverImageRect.left;
-    deltay                 = EARect.top - hoverImageRect.top;
+    const deltax           = EARect.left - hoverImageRect.left;
+    const deltay           = EARect.top - hoverImageRect.top;
     hIwidth                = hoverImageRect.width;
     hIheight               = hoverImageRect.height;
     leftPosPercent         = hIwidth / deltax;
@@ -751,7 +743,9 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
       let i = EndArea.dataset.clicks = (parseInt(EndArea.dataset.clicks) === lineColors.length - 1 || isNaN(EndArea.dataset.clicks)) ? 0 : parseInt(EndArea.dataset.clicks) + 1;
       lineColor                                              = lineColors[i];
       line.color = StartPoint.style.backgroundColor          = lineColor;
-      thisSessionContent.instructions.find(item => item.KatID === KatBox.id.split('-')[1]).KatLines.find(item => item.hashID === tbHash).lineColor = lineColor;
+      const selectedKB                                       = thisSessionContent.instructions.find(item => item.KatID === KatBox.id.split('-')[1]);
+      const selectedKL                                       = selectedKB?.KatLines.find(item => item.hashID === tbHash);
+      if (selectedKL) selectedKL.lineColor                   = lineColor;
       saveToLocalStorage();
       EndArea.style.border                                   = '5px solid ' + `${lineColor}`;
       event.preventDefault();
@@ -861,6 +855,9 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
 
   // window size change
   window.addEventListener('resize', function () {
+
+    if (!KatBox) return;
+
     // Update the dimensions of ImageHolder
     const hIRect               = ImageHolder.getBoundingClientRect();
     const hIchangeINwidth      = hIRect.width / hIwidth;
@@ -891,15 +888,20 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   */
 
   // line.hide() and .show() min-and-maximizing headlines
-  const h2Headline = KatBox.querySelector('.CatTitleArea');
-  let isCollapsed  = false;
+  const h2Headline           = KatBox.querySelector('.CatTitleArea');
+  const targetedItem         = thisSessionContent.instructions.find(item => item.KatID === KBHash);
+  let isCollapsed            = KatBox.querySelector('.containerC.bubbleContainer.row').classList.contains('minimize');
+  if (isCollapsed) line.hide();
   h2Headline.addEventListener('click', () => {
     isCollapsed = !isCollapsed;
     if (isCollapsed) {
+      targetedItem["h2IsCollapsed"] = true;
       line.hide();
     } else {
+      targetedItem["h2IsCollapsed"] = false;
       line.show();
     }
+  saveToLocalStorage();
   });
 
   const IHDH                                     = ImageHolder.getAttribute('data-hash'); // IHDH = ImageHolder Data Hash
@@ -1160,8 +1162,14 @@ function updateContentToUI() {
         };
       });
     }
+
+    // collapsing the KatBoxes or not
+    const cCbC               = tempSection.querySelector('.containerC.bubbleContainer.row');
+    if (e.h2IsCollapsed && !cCbC.classList.contains('minimize')) cCbC.classList.add('minimize');
+
   });
 
+  //allLinesData.forEach(lineObj => lineObj.line.position());
   const newCatOffer                                  = document.querySelectorAll('.newCategoryOffer')[0] || newCategoryOffer();
   instroCt.appendChild(newCatOffer);
 
@@ -1260,19 +1268,21 @@ function generateStaticHTML(content) {
     const newSrc             = oldSrc.replace('ready_for_upload/', '');
     element.setAttribute('src', newSrc);
   });
+  // adding LeaderLines as global variable
+  const DOMbody              = DOMclone.querySelector('body');
+  const linesData            = JSON.stringify(allLinesData);
+  const globVarScript        = document.createElement('script');
+  globVarScript.textContent  = `
+      window.allLinesData = ${linesData};
+  `;
+  DOMbody.insertAdjacentElement('beforeend', globVarScript);
   // add the minimal.js
   const minimalScript        = document.createElement('script');
   minimalScript.setAttribute('src', 'js/minimal.js');
-  const DOMbody              = DOMclone.querySelector('body');
   DOMbody.insertAdjacentElement('beforeend', minimalScript);
-  // adding LeaderLines as global variable
-  const linesData = JSON.stringify(allLinesData);
-  const globVarScript = DOMclone.createElement('script');
-  globVarScript.textContent = `
-      window.allLinesData = ${linesData};
-      console.log('Lines data loaded:', window.allLinesData);
-  `;
-  DOMclone.body.insertAdjacentElement('beforeend', globVarScript);
+  // clean the svg elements
+  DOMclone.querySelector('#leader-line-defs').remove();
+  DOMclone.querySelectorAll('svg').forEach(svg => svg.remove());
 
   const staticHTML = `<!DOCTYPE html>\n${DOMclone.outerHTML}`;
   return staticHTML;
@@ -1284,8 +1294,8 @@ let showAlert      = true;
 async function exportProject() {
 
   if (showAlert) {
-    alert('For proper functionality, please download/replace index.html into the "ready_for_upload" folder. \n\n(This popup will be ignored for this session)');
-    showAlert      = false;
+    alert('For proper functionality, please download/replace this file as/with index.html in the "ready_for_upload" folder. \n\n(This popup will be ignored for this session)');
+    //showAlert      = false;
   }
 
   const html       = generateStaticHTML(thisSessionContent);
@@ -1308,3 +1318,4 @@ exportButton.addEventListener("click", () => exportProject());
 
 // What to do
 // - something offsets the svg top and left position, but from where?
+// - in createLL, there is .on (tap) and EndArea.addEL("click"), check out whether I can trim it
