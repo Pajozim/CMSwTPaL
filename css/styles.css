@@ -172,13 +172,13 @@ img {
   cursor: pointer;
 }
 
-.minimize {
+.minimized {
   height: 0 !important;
   overflow: hidden;
   visibility: hidden;
 }
 
-.minimize, #inst-height, #intro-height {
+.minimized, #inst-height, #intro-height {
   transition: height 0.3s ease, visibility 0.3s ease;
 }
 

@@ -890,7 +890,7 @@ function createLeaderLine(tbHash, invisibility, SPID, EAID, lColor, EAValues, hI
   // line.hide() and .show() min-and-maximizing headlines
   const h2Headline           = KatBox.querySelector('.CatTitleArea');
   const targetedItem         = thisSessionContent.instructions.find(item => item.KatID === KBHash);
-  let isCollapsed            = KatBox.querySelector('.containerC.bubbleContainer.row').classList.contains('minimize');
+  let isCollapsed            = KatBox.querySelector('.containerC.bubbleContainer.row').classList.contains('minimized');
   if (isCollapsed) line.hide();
   h2Headline.addEventListener('click', () => {
     isCollapsed = !isCollapsed;
@@ -955,7 +955,7 @@ function updateContentToUI() {
       tempSection.classList.add('KatBox', 'row', 'list-group-item');
       tempSection.addEventListener('click', function (e) {
         if (e.target.classList.contains('CatTitleArea') || (e.target.tagName === 'H2' && e.target.parentElement.classList.contains('CatTitleArea'))) {
-          this.querySelector('.containerC.bubbleContainer.row').classList.toggle('minimize');
+          this.querySelector('.containerC.bubbleContainer.row').classList.toggle('minimized');
           allLinesData.forEach(lineObj => {
             lineObj.line.position();
           });
@@ -1165,7 +1165,7 @@ function updateContentToUI() {
 
     // collapsing the KatBoxes or not
     const cCbC               = tempSection.querySelector('.containerC.bubbleContainer.row');
-    if (e.h2IsCollapsed && !cCbC.classList.contains('minimize')) cCbC.classList.add('minimize');
+    if (e.h2IsCollapsed && !cCbC.classList.contains('minimized')) cCbC.classList.add('minimized');
 
   });
 
@@ -1184,7 +1184,7 @@ function updateContentToUI() {
 const hlButtonintro          = document.getElementById("headline-intro");
 
 hlButtonintro.addEventListener('click', function (e) {
-  document.querySelector('#intro-height').classList.toggle('minimize');
+  document.querySelector('#intro-height').classList.toggle('minimized');
   this.classList.toggle('changedState');
   allLinesData.forEach(lineObj => {
     lineObj.line.position();
@@ -1198,8 +1198,8 @@ hlButtonInstro.addEventListener('click', function (e) {
   this.classList.toggle('width100');
 
   const instroContainer      = document.querySelector('#instructions-container');
-  instroContainer.classList.toggle('minimize');
-  let isCollapsed = instroContainer.classList.contains('minimize');
+  instroContainer.classList.toggle('minimized');
+  let isCollapsed = instroContainer.classList.contains('minimized');
 
   if (isCollapsed) {
     allLinesData.forEach(Obj => {
@@ -1207,7 +1207,7 @@ hlButtonInstro.addEventListener('click', function (e) {
     })
   }
   else {
-    const allBubblesContainer          = document.querySelectorAll('.containerC.bubbleContainer:not(.minimize)');
+    const allBubblesContainer          = document.querySelectorAll('.containerC.bubbleContainer:not(.minimized)');
     allBubblesContainer.forEach(container => {
       const allbubbles           = container.querySelectorAll('[id^="txtbubble-"]');
       allbubbles.forEach(bubble => {
