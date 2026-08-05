@@ -76,7 +76,7 @@
 | *Build your content with drag-and-drop.* | *The clean, final output ready for any server.* |
 
 ---
--->
+
 
 ## 💡 What I Learned & Challenges Solved
 
@@ -86,6 +86,7 @@
 *   **Complex UI interactions:** Successfully integrated multiple libraries (Quill, Sortable, InteractJS, LeaderLine) to work together seamlessly.
 
 ---
+-->
 
 ## 🤝 Contributing
 
